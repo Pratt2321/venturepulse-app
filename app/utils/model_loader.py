@@ -4,21 +4,37 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-MODEL_PATH = "models/valuation_pipeline.pkl"
-DATA_PATH = "data/processed/unicorns_with_predictions.csv"
+# Locate the active processed CSV and model bundle
+DATA_PATHS = [
+    "data/processed/unicorns_with_predictions.csv",
+    "/Users/prathampradhan/Developer/CMSE 830/venturepulse-app/data/processed/unicorns_with_predictions.csv",
+    "/Users/prathampradhan/.gemini/antigravity-ide/scratch/venturepulse-app/data/processed/unicorns_with_predictions.csv"
+]
 
-@st.cache_data
+MODEL_PATHS = [
+    "models/valuation_pipeline.pkl",
+    "/Users/prathampradhan/Developer/CMSE 830/venturepulse-app/models/valuation_pipeline.pkl",
+    "/Users/prathampradhan/.gemini/antigravity-ide/scratch/venturepulse-app/models/valuation_pipeline.pkl"
+]
+
+def get_valid_path(paths):
+    for p in paths:
+        if os.path.exists(p):
+            return p
+    return paths[0]
+
 def load_data():
-    if not os.path.exists(DATA_PATH):
-        raise FileNotFoundError(f"Missing {DATA_PATH}. Run data/download_and_clean.py and models/train_model.py first.")
-    df = pd.read_csv(DATA_PATH)
+    path = get_valid_path(DATA_PATHS)
+    df = pd.read_csv(path)
+    # Ensure bubble sizing for map emphasizes giants like Anthropic ($965B) & OpenAI ($840B)
+    # while keeping smaller $1B unicorns visible
+    df["map_bubble_size"] = np.log1p(df["valuation_b"]) * 5.0 + 3.0
     return df
 
 @st.cache_resource
 def load_model_bundle():
-    if not os.path.exists(MODEL_PATH):
-        raise FileNotFoundError(f"Missing {MODEL_PATH}. Run models/train_model.py first.")
-    with open(MODEL_PATH, "rb") as f:
+    path = get_valid_path(MODEL_PATHS)
+    with open(path, "rb") as f:
         bundle = pickle.load(f)
     return bundle
 
@@ -65,7 +81,6 @@ def predict_valuation(
     pred_log = pipe.predict(input_df)[0]
     pred_valuation_m = float(np.expm1(pred_log))
 
-    # Standard error estimate for ~80% confidence interval
     std_log_error = 0.42
     lower_log = pred_log - (1.28 * std_log_error)
     upper_log = pred_log + (1.28 * std_log_error)
@@ -83,14 +98,12 @@ def predict_valuation(
     }
 
 def find_closest_comps(df, industry, hub_category, is_ai_frontier, n=3):
-    # Match on AI frontier first, then industry
     subset = df[df["clean_industry"] == industry].copy()
     if is_ai_frontier:
         ai_subset = subset[subset["is_ai_frontier"] == 1]
         if len(ai_subset) >= n:
             subset = ai_subset
 
-    # Sort by valuation or hub match
     subset["hub_match"] = (subset["hub_category"] == hub_category).astype(int)
     comps = subset.sort_values(by=["hub_match", "valuation_b"], ascending=[False, False]).head(n)
     return comps

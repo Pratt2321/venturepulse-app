@@ -16,7 +16,7 @@ st.set_page_config(
 # --- Custom Dark Aesthetic CSS ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
     
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
@@ -27,7 +27,7 @@ st.markdown("""
         padding: 24px 32px;
         border-radius: 14px;
         border: 1px solid rgba(255, 255, 255, 0.08);
-        margin-bottom: 24px;
+        margin-bottom: 20px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     }
     
@@ -35,13 +35,13 @@ st.markdown("""
         display: inline-block;
         padding: 4px 12px;
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.8px;
         border-radius: 20px;
-        background: rgba(0, 242, 254, 0.12);
+        background: rgba(0, 242, 254, 0.15);
         color: #00F2FE;
-        border: 1px solid rgba(0, 242, 254, 0.3);
+        border: 1px solid rgba(0, 242, 254, 0.4);
         margin-bottom: 10px;
     }
     
@@ -60,10 +60,39 @@ st.markdown("""
         font-size: 1.0rem;
         margin: 0;
     }
+
+    .centicorn-spotlight {
+        background: linear-gradient(90deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+        border: 1px solid rgba(0, 242, 254, 0.25);
+        border-radius: 10px;
+        padding: 12px 18px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .spotlight-badge {
+        font-weight: 800;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #00F2FE;
+        background: rgba(0, 242, 254, 0.1);
+        padding: 3px 10px;
+        border-radius: 6px;
+        border: 1px solid rgba(0, 242, 254, 0.3);
+    }
+
+    .spotlight-item {
+        font-size: 0.88rem;
+        color: #E2E8F0;
+    }
     
     .stat-card {
         background: #1E293B;
-        border: 1px solid rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         padding: 18px;
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -71,14 +100,14 @@ st.markdown("""
     }
     
     .stat-card:hover {
-        border-color: rgba(0, 242, 254, 0.4);
+        border-color: rgba(0, 242, 254, 0.5);
         transform: translateY(-2px);
     }
     
     .stat-label {
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.6px;
         color: #94A3B8;
         font-weight: 600;
         margin-bottom: 4px;
@@ -86,7 +115,7 @@ st.markdown("""
     
     .stat-value {
         font-size: 1.6rem;
-        font-weight: 700;
+        font-weight: 800;
         color: #F8FAFC;
     }
     
@@ -145,8 +174,26 @@ st.markdown("""
     <div class="badge-pill">Venture Capital & Private Equity Intelligence</div>
     <h1 class="hero-title">🦄 VenturePulse: Startup Valuation & Market Intelligence</h1>
     <p class="hero-subtitle">
-        Reverse-engineering private tech valuations across 1,440+ global unicorns (including OpenAI, Anthropic, DeepSeek, and ByteDance) using empirical ML regression and investor network elasticity.
+        Reverse-engineering private tech valuations across 1,447 global unicorns (featuring Anthropic, OpenAI, ByteDance, and Databricks) using empirical ML regression and investor network elasticity.
     </p>
+</div>
+""", unsafe_allow_html=True)
+
+# --- Centicorn Spotlight Row ---
+st.markdown("""
+<div class="centicorn-spotlight">
+    <span class="spotlight-badge">🔥 Mega-Centicorn Vanguard</span>
+    <span class="spotlight-item">🤖 <strong>Anthropic</strong>: <span style="color:#00F2FE;">$965B</span> (SF)</span>
+    <span style="color:#475569;">•</span>
+    <span class="spotlight-item">🧠 <strong>OpenAI</strong>: <span style="color:#00F2FE;">$840B</span> (SF)</span>
+    <span style="color:#475569;">•</span>
+    <span class="spotlight-item">📱 <strong>ByteDance</strong>: <span style="color:#00F2FE;">$480B</span> (Beijing)</span>
+    <span style="color:#475569;">•</span>
+    <span class="spotlight-item">💾 <strong>Databricks</strong>: <span style="color:#00F2FE;">$190B</span> (SF)</span>
+    <span style="color:#475569;">•</span>
+    <span class="spotlight-item">💳 <strong>Stripe</strong>: <span style="color:#00F2FE;">$159B</span> (SF)</span>
+    <span style="color:#475569;">•</span>
+    <span class="spotlight-item">⚡ <strong>DeepSeek</strong>: <span style="color:#00F2FE;">$50B</span> (Hangzhou)</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -166,24 +213,24 @@ with k2:
     <div class="stat-card">
         <div class="stat-label">Median Valuation</div>
         <div class="stat-value">${df['valuation_b'].median():.2f} Billion</div>
-        <div class="stat-subtext">Entry baseline to club</div>
+        <div class="stat-subtext">Baseline entry to unicorn club</div>
     </div>
     """, unsafe_allow_html=True)
 with k3:
     st.markdown("""
     <div class="stat-card">
-        <div class="stat-label">Frontier AI Leader</div>
+        <div class="stat-label">Frontier Centicorns</div>
         <div class="stat-value">Anthropic & OpenAI</div>
-        <div class="stat-subtext">$965B & $840B Top Valuations</div>
+        <div class="stat-subtext">$965B & $840B Mega-Leaders</div>
     </div>
     """, unsafe_allow_html=True)
 with k4:
-    bay_share = (df['hub_category'] == 'SF Bay Area').mean() * 100
+    bay_count = (df['hub_category'] == 'SF Bay Area').sum()
     st.markdown(f"""
     <div class="stat-card">
         <div class="stat-label">Leading Tech Hub</div>
         <div class="stat-value">SF Bay Area</div>
-        <div class="stat-subtext">{bay_share:.1f}% global market share</div>
+        <div class="stat-subtext">{bay_count:,} titans in Silicon Valley</div>
     </div>
     """, unsafe_allow_html=True)
 with k5:
@@ -191,7 +238,7 @@ with k5:
     <div class="stat-card">
         <div class="stat-label">Largest Sector</div>
         <div class="stat-value">Enterprise Tech</div>
-        <div class="stat-subtext">561 active titans</div>
+        <div class="stat-subtext">561 active titans (AI & SaaS)</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -245,15 +292,23 @@ tab1, tab2, tab3, tab4 = st.tabs([
 # =====================================================================
 with tab1:
     st.subheader("Global Headquarters of the World's Billion-Dollar Startups")
-    st.markdown(f"Displaying **{len(filtered_df):,}** active unicorns sized by valuation ($B) and colored by industry sector.")
+    st.markdown(f"Displaying **{len(filtered_df):,}** active unicorns. Circles are scaled with visual logarithmic expansion so mega-centicorns like **Anthropic ($965B)** and **OpenAI ($840B)** command prominent prominence.")
 
-    # Geospatial Map
+    map_c1, map_c2 = st.columns([1, 4])
+    with map_c1:
+        map_projection = st.selectbox("Map Perspective:", ["natural earth", "orthographic (3D Globe)", "mercator"])
+    with map_c2:
+        st.caption("Tip: Hover over circles to inspect company valuation, lead investors, and headquarters city. Notice the massive cluster in San Francisco!")
+
+    # Sort so smallest circles are rendered first and massive titans render on top
+    map_data = filtered_df.sort_values(by="valuation_b", ascending=True).copy()
+
     fig_map = px.scatter_geo(
-        filtered_df,
+        map_data,
         lat="latitude",
         lon="longitude",
         hover_name="Company",
-        size="valuation_b",
+        size="map_bubble_size",
         color="clean_industry",
         hover_data={
             "valuation_b": ":$.1fB",
@@ -261,11 +316,12 @@ with tab1:
             "country": True,
             "year_joined": True,
             "select_investors": True,
+            "map_bubble_size": False,
             "latitude": False,
             "longitude": False
         },
-        size_max=40,
-        projection="natural earth",
+        size_max=46,
+        projection="orthographic" if "3D" in map_projection else map_projection,
         template="plotly_dark",
         color_discrete_sequence=px.colors.qualitative.Prism
     )
@@ -277,8 +333,8 @@ with tab1:
     )
     fig_map.update_layout(
         margin={"r": 0, "t": 20, "l": 0, "b": 0},
-        height=540,
-        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
+        height=560,
+        legend=dict(orientation="h", yanchor="bottom", y=-0.22, xanchor="center", x=0.5)
     )
     st.plotly_chart(fig_map, use_container_width=True)
 
@@ -372,7 +428,6 @@ with tab2:
     with sim_col2:
         st.markdown(f"#### 2. Valuation Inference for **{sim_name}**")
 
-        # Run Prediction
         pred_res = predict_valuation(
             tenure_years=sim_tenure,
             investors_count=sim_investors,
@@ -397,7 +452,6 @@ with tab2:
         status_text = "🏆 Mega-Decacorn ($10B+)" if pred_val_b >= 10.0 else ("🦄 Unicorn Status ($1B+)" if pred_val_b >= 1.0 else "🌱 Scaling Stage (<$1B)")
         status_color = "#10B981" if pred_val_b >= 10.0 else ("#38BDF8" if pred_val_b >= 1.0 else "#F59E0B")
 
-        # Output Box
         st.markdown(f"""
         <div style="background: linear-gradient(135deg, #1E293B, #0F172A); padding: 22px; border-radius: 12px; border: 1px solid #38BDF8; box-shadow: 0 4px 20px rgba(56, 189, 248, 0.2);">
             <div style="color: #38BDF8; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">Model Predicted Fair-Market Valuation</div>
@@ -443,7 +497,6 @@ with tab3:
     By analyzing **Unicorn Tenure (Years)** against **Post-Money Valuation ($B)** on a logarithmic scale, we detect the **Decacorn Alpha** cohort—companies that scaled to tens or hundreds of billions in record time.
     """)
 
-    # Velocity Scatter Plot
     fig_scatter = px.scatter(
         df,
         x="tenure_years",
