@@ -1,0 +1,163 @@
+import json
+
+notebook = {
+    'cells': [
+        {
+            'cell_type': 'markdown',
+            'metadata': {},
+            'source': [
+                '# 🦄 VenturePulse: Global Startup Valuation & Capital Efficiency\n',
+                '### CMSE 830 - Midterm Project Analysis & Empirical Modeling\n',
+                '\n',
+                '**Research Question:** *To what extent can private tech startup valuations be quantitatively modeled using capital raised, sector, geography, age, and investor network—and who are the true capital-efficient outliers?*'
+            ]
+        },
+        {
+            'cell_type': 'code',
+            'execution_count': None,
+            'metadata': {},
+            'outputs': [],
+            'source': [
+                'import pandas as pd\n',
+                'import numpy as np\n',
+                'import matplotlib.pyplot as plt\n',
+                'import seaborn as sns\n',
+                'import pickle\n',
+                '\n',
+                '# Configure plots\n',
+                'plt.style.use("seaborn-v0_8-whitegrid")\n',
+                'sns.set_palette("muted")\n',
+                '\n',
+                '# Load processed dataset\n',
+                'df = pd.read_csv("../data/processed/unicorns_with_predictions.csv")\n',
+                'print(f"Loaded {len(df)} unicorns across {df[\'country\'].nunique()} countries.")\n',
+                'df.head(3)'
+            ]
+        },
+        {
+            'cell_type': 'markdown',
+            'metadata': {},
+            'source': [
+                '## 1. Exploratory Data Analysis: Valuation Distributions & Power Laws\n',
+                'Private tech valuations follow an extreme **Pareto / Power Law distribution**. Below we contrast the raw skewed distribution with the log-transformed distribution.'
+            ]
+        },
+        {
+            'cell_type': 'code',
+            'execution_count': None,
+            'metadata': {},
+            'outputs': [],
+            'source': [
+                'fig, axes = plt.subplots(1, 2, figsize=(14, 5))\n',
+                '\n',
+                'sns.histplot(df["valuation_b"], bins=30, kde=True, ax=axes[0], color="#3b82f6")\n',
+                'axes[0].set_title("Raw Valuation Distribution ($B) - Extreme Positive Skew")\n',
+                'axes[0].set_xlabel("Valuation ($B)")\n',
+                '\n',
+                'sns.histplot(np.log1p(df["valuation_m"]), bins=30, kde=True, ax=axes[1], color="#10b981")\n',
+                'axes[1].set_title("Log-Transformed Valuation - Approximate Normality")\n',
+                'axes[1].set_xlabel("log(Valuation in $M)")\n',
+                '\n',
+                'plt.tight_layout()\n',
+                'plt.show()'
+            ]
+        },
+        {
+            'cell_type': 'markdown',
+            'metadata': {},
+            'source': [
+                '## 2. Sector Valuation Multiples & Capital Raised\n',
+                'Examining how total equity capital raised scales into post-money valuation across different tech sectors.'
+            ]
+        },
+        {
+            'cell_type': 'code',
+            'execution_count': None,
+            'metadata': {},
+            'outputs': [],
+            'source': [
+                'plt.figure(figsize=(12, 6))\n',
+                'top_sectors = df["clean_industry"].value_counts().head(8).index\n',
+                'subset = df[df["clean_industry"].isin(top_sectors)]\n',
+                '\n',
+                'sns.boxplot(data=subset, x="clean_industry", y="capital_efficiency_ratio", showfliers=False, palette="viridis")\n',
+                'plt.title("Capital Efficiency Ratio (Valuation / Total Raised) by Sector")\n',
+                'plt.xlabel("Sector")\n',
+                'plt.ylabel("Valuation / Funding Multiple (x)")\n',
+                'plt.xticks(rotation=30, ha="right")\n',
+                'plt.tight_layout()\n',
+                'plt.show()'
+            ]
+        },
+        {
+            'cell_type': 'markdown',
+            'metadata': {},
+            'source': [
+                '## 3. Machine Learning Model Benchmark & Diagnostics\n',
+                'Reviewing the trained Random Forest and Ridge regression pipelines.'
+            ]
+        },
+        {
+            'cell_type': 'code',
+            'execution_count': None,
+            'metadata': {},
+            'outputs': [],
+            'source': [
+                'with open("../models/valuation_pipeline.pkl", "rb") as f:\n',
+                '    bundle = pickle.load(f)\n',
+                '\n',
+                'print(f"Selected Model: {bundle[\'model_name\']}")\n',
+                'print(f"5-Fold CV R²: {bundle[\'cv_r2\']:.4f}")\n',
+                'print(f"Test Set R²:   {bundle[\'test_r2\']:.4f}")\n',
+                'print(f"Test Set MAE:  ${bundle[\'test_mae_m\']:,.2f} Million\\n")\n',
+                '\n',
+                'print("Top 8 Positive Valuation Elasticities (Ridge):")\n',
+                'print(bundle["coefficients"].head(8).to_string(index=False))'
+            ]
+        },
+        {
+            'cell_type': 'markdown',
+            'metadata': {},
+            'source': [
+                '## 4. Capital Efficiency Residual Analysis\n',
+                'Examining companies that deviate substantially from expected market valuations.'
+            ]
+        },
+        {
+            'cell_type': 'code',
+            'execution_count': None,
+            'metadata': {},
+            'outputs': [],
+            'source': [
+                'plt.figure(figsize=(10, 6))\n',
+                'sns.scatterplot(\n',
+                '    data=df,\n',
+                '    x="total_raised_m_imputed",\n',
+                '    y="valuation_b",\n',
+                '    hue="efficiency_tier",\n',
+                '    palette={"Capital-Efficient Alpha (Undervalued / High Yield)": "#10b981", "Fair Market Valuation": "#3b82f6", "Capital Guzzler (Over-Funded Relative to Value)": "#ef4444"},\n',
+                '    alpha=0.7\n',
+                ')\n',
+                'plt.xscale("log")\n',
+                'plt.yscale("log")\n',
+                'plt.title("Capital Efficiency Matrix: Funding Raised vs Actual Valuation (Log Scale)")\n',
+                'plt.xlabel("Total Equity Capital Raised ($M, Log Scale)")\n',
+                'plt.ylabel("Valuation ($B, Log Scale)")\n',
+                'plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")\n',
+                'plt.tight_layout()\n',
+                'plt.show()'
+            ]
+        }
+    ],
+    'metadata': {
+        'language_info': {'name': 'python', 'version': '3.14.2'},
+        'orig_nbformat': 4
+    },
+    'nbformat': 4,
+    'nbformat_minor': 2
+}
+
+with open('notebooks/01_eda_and_modeling.ipynb', 'w') as f:
+    json.dump(notebook, f, indent=2)
+
+print('Jupyter notebook generated successfully at notebooks/01_eda_and_modeling.ipynb!')

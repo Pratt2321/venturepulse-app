@@ -545,7 +545,7 @@ with tab4:
     st.plotly_chart(fig_coef, use_container_width=True)
 
     with st.expander("📚 Methodology & Academic Defense Notes (Click to expand)"):
-        st.markdown("""
+        st.markdown(r"""
         1. **Why Log-Scale Transformation?**
            Startup valuations and funding totals adhere strictly to a **Pareto / Power-Law Distribution** (skewness $> 8.0$). Naive OLS linear regression on raw dollar amounts creates severe heteroscedasticity and nonsensical negative valuation predictions. Modeling in log-space ($\log(y) = \mathbf{w}^T \mathbf{x}$) linearizes exponential growth dynamics and guarantees positive predictions upon exponentiation.
            
