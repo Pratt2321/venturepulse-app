@@ -16,7 +16,7 @@ st.set_page_config(
 # --- Custom Dark Aesthetic CSS ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
     
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
@@ -142,54 +142,56 @@ except Exception as e:
 # --- Top Banner Header ---
 st.markdown("""
 <div class="main-header">
-    <div class="badge-pill">Private Equity & Venture Intelligence</div>
-    <h1 class="hero-title">🦄 VenturePulse: Startup Valuation & Capital Efficiency Engine</h1>
+    <div class="badge-pill">Venture Capital & Private Equity Intelligence</div>
+    <h1 class="hero-title">🦄 VenturePulse: Startup Valuation & Market Intelligence</h1>
     <p class="hero-subtitle">
-        Reverse-engineering private tech valuations across 1,000+ global unicorns using empirical regression and residual capital efficiency analysis.
+        Reverse-engineering private tech valuations across 1,440+ global unicorns (including OpenAI, Anthropic, DeepSeek, and ByteDance) using empirical ML regression and investor network elasticity.
     </p>
 </div>
 """, unsafe_allow_html=True)
 
 # --- High Level KPIs ---
 k1, k2, k3, k4, k5 = st.columns(5)
+total_market_cap = df["valuation_b"].sum()
 with k1:
-    st.markdown("""
+    st.markdown(f"""
     <div class="stat-card">
-        <div class="stat-label">Total Unicorn Cap</div>
-        <div class="stat-value">$3.41 Trillion</div>
-        <div class="stat-subtext">Across 1,037 tracked titans</div>
+        <div class="stat-label">Total Ecosystem Value</div>
+        <div class="stat-value">${total_market_cap/1000.0:.2f} Trillion</div>
+        <div class="stat-subtext">Across {len(df):,} global unicorns</div>
     </div>
     """, unsafe_allow_html=True)
 with k2:
-    st.markdown("""
+    st.markdown(f"""
     <div class="stat-card">
         <div class="stat-label">Median Valuation</div>
-        <div class="stat-value">$1.60 Billion</div>
-        <div class="stat-subtext">Baseline entry multiple</div>
+        <div class="stat-value">${df['valuation_b'].median():.2f} Billion</div>
+        <div class="stat-subtext">Entry baseline to club</div>
     </div>
     """, unsafe_allow_html=True)
 with k3:
     st.markdown("""
     <div class="stat-card">
-        <div class="stat-label">Median Capital Raised</div>
-        <div class="stat-value">$338 Million</div>
-        <div class="stat-subtext">5.2x Median Efficiency Ratio</div>
+        <div class="stat-label">Frontier AI Leader</div>
+        <div class="stat-value">Anthropic & OpenAI</div>
+        <div class="stat-subtext">$965B & $840B Top Valuations</div>
     </div>
     """, unsafe_allow_html=True)
 with k4:
-    st.markdown("""
+    bay_share = (df['hub_category'] == 'SF Bay Area').mean() * 100
+    st.markdown(f"""
     <div class="stat-card">
-        <div class="stat-label">Leading Hub</div>
+        <div class="stat-label">Leading Tech Hub</div>
         <div class="stat-value">SF Bay Area</div>
-        <div class="stat-subtext">31.2% global market share</div>
+        <div class="stat-subtext">{bay_share:.1f}% global market share</div>
     </div>
     """, unsafe_allow_html=True)
 with k5:
     st.markdown("""
     <div class="stat-card">
-        <div class="stat-label">Fastest Sector</div>
-        <div class="stat-value">AI & Fintech</div>
-        <div class="stat-subtext">Avg 4.8 yrs to $1B status</div>
+        <div class="stat-label">Largest Sector</div>
+        <div class="stat-value">Enterprise Tech</div>
+        <div class="stat-subtext">561 active titans</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -198,7 +200,7 @@ st.write("")
 # --- Sidebar Controls ---
 st.sidebar.image("https://img.icons8.com/fluency/96/unicorn.png", width=64)
 st.sidebar.title("VenturePulse Filters")
-st.sidebar.markdown("Explore global private tech unicorns and simulate custom valuations.")
+st.sidebar.markdown(f"Exploring **{len(df):,}** live tech unicorns worldwide.")
 
 selected_industry = st.sidebar.selectbox(
     "Filter by Industry Sector:",
@@ -206,16 +208,18 @@ selected_industry = st.sidebar.selectbox(
 )
 
 selected_hub = st.sidebar.selectbox(
-    "Filter by Global Hub:",
+    "Filter by Tech Hub:",
     ["All Hubs"] + sorted(df["hub_category"].unique().tolist())
 )
+
+only_ai = st.sidebar.checkbox("Show Only Frontier AI & DeepTech", value=False)
 
 min_val = st.sidebar.slider(
     "Minimum Valuation ($B):",
     min_value=1.0,
     max_value=float(df["valuation_b"].max()),
     value=1.0,
-    step=1.0
+    step=5.0
 )
 
 # Apply global filters for visualizations
@@ -224,13 +228,15 @@ if selected_industry != "All Sectors":
     filtered_df = filtered_df[filtered_df["clean_industry"] == selected_industry]
 if selected_hub != "All Hubs":
     filtered_df = filtered_df[filtered_df["hub_category"] == selected_hub]
+if only_ai:
+    filtered_df = filtered_df[filtered_df["is_ai_frontier"] == 1]
 filtered_df = filtered_df[filtered_df["valuation_b"] >= min_val]
 
 # --- Main Tabs ---
 tab1, tab2, tab3, tab4 = st.tabs([
     "🗺️ Global Unicorn Map",
     "🎛️ The VC Valuation Simulator",
-    "⚖️ Capital Efficiency Screener",
+    "⚡ Velocity & Decacorn Screener",
     "📈 Model Diagnostics & Elasticity"
 ])
 
@@ -239,7 +245,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
 # =====================================================================
 with tab1:
     st.subheader("Global Headquarters of the World's Billion-Dollar Startups")
-    st.markdown("Interactive geospatial distribution of 1,037 active unicorns sized by valuation ($B) and colored by sector.")
+    st.markdown(f"Displaying **{len(filtered_df):,}** active unicorns sized by valuation ($B) and colored by industry sector.")
 
     # Geospatial Map
     fig_map = px.scatter_geo(
@@ -251,15 +257,14 @@ with tab1:
         color="clean_industry",
         hover_data={
             "valuation_b": ":$.1fB",
-            "total_raised_m": True,
             "city": True,
             "country": True,
-            "capital_efficiency_ratio": ":.1fx",
+            "year_joined": True,
             "select_investors": True,
             "latitude": False,
             "longitude": False
         },
-        size_max=35,
+        size_max=40,
         projection="natural earth",
         template="plotly_dark",
         color_discrete_sequence=px.colors.qualitative.Prism
@@ -272,7 +277,7 @@ with tab1:
     )
     fig_map.update_layout(
         margin={"r": 0, "t": 20, "l": 0, "b": 0},
-        height=520,
+        height=540,
         legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
     )
     st.plotly_chart(fig_map, use_container_width=True)
@@ -295,7 +300,7 @@ with tab1:
         st.plotly_chart(fig_sec, use_container_width=True)
 
     with c_right:
-        st.write("##### Top 10 Dominant Global Cities by Unicorn Count")
+        st.write("##### Top 10 Global Cities by Unicorn Count")
         city_counts = filtered_df["city"].value_counts().head(10).reset_index()
         city_counts.columns = ["City", "Count"]
         fig_city = px.bar(
@@ -317,19 +322,19 @@ with tab1:
 with tab2:
     st.subheader("Interactive Valuation & Cap Table Simulator")
     st.markdown("""
-    Select startup parameters below to predict the **fair-market post-money valuation** using our trained **Random Forest Regressor** ($R^2 \approx 0.50$ on log-valuation) and compare against real unicorn comps.
+    Select startup attributes below to predict the **fair-market post-money valuation** using our trained **Random Forest Regressor** and compare against comps like Anthropic, OpenAI, Stripe, and Databricks.
     """)
 
     sim_col1, sim_col2 = st.columns([1, 1.3], gap="large")
 
     with sim_col1:
         st.markdown("#### 1. Configure Startup Profile")
-        sim_name = st.text_input("Startup / Project Name:", value="Aegis AI")
+        sim_name = st.text_input("Startup / Project Name:", value="Nexus AI")
         
         sim_ind = st.selectbox(
             "Primary Industry Sector:",
             sorted(df["clean_industry"].unique().tolist()),
-            index=sorted(df["clean_industry"].unique().tolist()).index("Artificial Intelligence") if "Artificial Intelligence" in df["clean_industry"].unique() else 0
+            index=sorted(df["clean_industry"].unique().tolist()).index("Enterprise Tech") if "Enterprise Tech" in df["clean_industry"].unique() else 0
         )
 
         sim_hub = st.selectbox(
@@ -338,37 +343,30 @@ with tab2:
             index=sorted(df["hub_category"].unique().tolist()).index("SF Bay Area") if "SF Bay Area" in df["hub_category"].unique() else 0
         )
 
-        sim_raised = st.slider(
-            "Total Capital Raised to Date ($M):",
-            min_value=1.0,
-            max_value=800.0,
-            value=65.0,
-            step=2.5,
-            help="Total cumulative equity funding across all rounds."
-        )
-
-        sim_years = st.slider(
-            "Company Age / Years to Scale:",
-            min_value=1.0,
-            max_value=20.0,
-            value=3.5,
+        sim_tenure = st.slider(
+            "Company Operating Horizon / Maturity (Years):",
+            min_value=0.5,
+            max_value=15.0,
+            value=3.0,
             step=0.5,
-            help="Number of operating years since founding."
+            help="Years active operating and scaling."
         )
 
-        col_inv, col_deals = st.columns(2)
-        with col_inv:
-            sim_investors = st.number_input("Institutional Investors:", min_value=1, max_value=60, value=12)
-        with col_deals:
-            sim_deals = st.number_input("Completed Funding Rounds:", min_value=1, max_value=15, value=4)
+        sim_ai = st.checkbox("Frontier AI / Foundation Model / DeepTech Company", value=True)
+
+        sim_investors = st.slider("Institutional Investors Count:", min_value=1, max_value=15, value=4)
 
         st.markdown("##### Tier-1 VC Backing On Cap Table:")
         b_c1, b_c2 = st.columns(2)
         with b_c1:
             has_seq = st.checkbox("Sequoia Capital", value=True)
             has_a16 = st.checkbox("Andreessen Horowitz (a16z)", value=False)
+            has_goog = st.checkbox("Google / GV / CapitalG", value=False)
+            has_khos = st.checkbox("Khosla Ventures", value=True)
         with b_c2:
+            has_thriv = st.checkbox("Thrive Capital", value=False)
             has_soft = st.checkbox("SoftBank Vision Fund", value=False)
+            has_acc = st.checkbox("Accel", value=False)
             has_tig = st.checkbox("Tiger Global", value=False)
 
     with sim_col2:
@@ -376,55 +374,59 @@ with tab2:
 
         # Run Prediction
         pred_res = predict_valuation(
-            total_raised_m=sim_raised,
-            years_to_unicorn=sim_years,
+            tenure_years=sim_tenure,
             investors_count=sim_investors,
-            deal_terms=sim_deals,
             industry=sim_ind,
             hub_category=sim_hub,
+            is_ai_frontier=int(sim_ai),
             has_sequoia=int(has_seq),
             has_a16z=int(has_a16),
+            has_google=int(has_goog),
+            has_khosla=int(has_khos),
+            has_thrive=int(has_thriv),
             has_softbank=int(has_soft),
-            has_tiger=int(has_tig),
-            has_tier1=int(has_seq or has_a16 or has_soft or has_tig)
+            has_accel=int(has_acc),
+            has_tiger=int(has_tig)
         )
 
         pred_val_m = pred_res["pred_valuation_m"]
         pred_val_b = pred_res["pred_valuation_b"]
-        ci_lower = pred_res["ci_lower_m"]
-        ci_upper = pred_res["ci_upper_m"]
-        multiple = pred_res["implied_multiple"]
+        ci_lower_b = pred_res["ci_lower_b"]
+        ci_upper_b = pred_res["ci_upper_b"]
+
+        status_text = "🏆 Mega-Decacorn ($10B+)" if pred_val_b >= 10.0 else ("🦄 Unicorn Status ($1B+)" if pred_val_b >= 1.0 else "🌱 Scaling Stage (<$1B)")
+        status_color = "#10B981" if pred_val_b >= 10.0 else ("#38BDF8" if pred_val_b >= 1.0 else "#F59E0B")
 
         # Output Box
         st.markdown(f"""
         <div style="background: linear-gradient(135deg, #1E293B, #0F172A); padding: 22px; border-radius: 12px; border: 1px solid #38BDF8; box-shadow: 0 4px 20px rgba(56, 189, 248, 0.2);">
             <div style="color: #38BDF8; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">Model Predicted Fair-Market Valuation</div>
             <div style="font-size: 2.8rem; font-weight: 800; color: #FFFFFF; margin: 4px 0;">
-                ${pred_val_m:,.0f}M <span style="font-size: 1.4rem; color: #94A3B8;">(${pred_val_b:.2f}B)</span>
+                ${pred_val_b:.2f} Billion <span style="font-size: 1.2rem; color: #94A3B8;">(${pred_val_m:,.0f}M)</span>
             </div>
             <div style="color: #94A3B8; font-size: 0.9rem;">
-                Estimated 80% Confidence Interval: <strong style="color: #F8FAFC;">${ci_lower:,.0f}M – ${ci_upper:,.0f}M</strong>
+                Estimated 80% Confidence Interval: <strong style="color: #F8FAFC;">${ci_lower_b:.2f}B – ${ci_upper_b:.2f}B</strong>
             </div>
             <hr style="border-color: rgba(255,255,255,0.1); margin: 16px 0;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
-                <div>Implied Funding Multiple: <strong style="color: #38BDF8;">{multiple:.1f}x</strong> (vs 5.2x median)</div>
-                <div>Status: <strong style="color: {'#10B981' if pred_val_b >= 1.0 else '#F59E0B'};">{'🦄 Unicorn Status Achieved' if pred_val_b >= 1.0 else '🌱 Sub-Unicorn Growth Stage'}</strong></div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.95rem;">
+                <div>Cohort Classification: <strong style="color: {status_color};">{status_text}</strong></div>
+                <div>AI Frontier Premium Applied: <strong style="color: {'#10B981' if sim_ai else '#94A3B8'};">{'✅ Active (+78.6%)' if sim_ai else '❌ Inactive'}</strong></div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
         st.write("")
         st.markdown("##### 📌 Nearest Real-World Unicorn Comps")
-        comps = find_closest_comps(df, sim_ind, sim_raised, n=3)
+        comps = find_closest_comps(df, sim_ind, sim_hub, sim_ai, n=3)
         for _, comp in comps.iterrows():
             st.markdown(f"""
             <div class="comp-card">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div class="comp-title">{comp['Company']}</div>
-                    <div style="font-weight: 700; color: #10B981; font-size: 1.1rem;">${comp['valuation_b']:.1f}B Valuation</div>
+                    <div style="font-weight: 700; color: #10B981; font-size: 1.15rem;">${comp['valuation_b']:.1f}B Valuation</div>
                 </div>
                 <div style="color: #94A3B8; font-size: 0.85rem; margin-top: 4px;">
-                    📍 {comp['city']}, {comp['country']} | 💰 Total Raised: ${comp['total_raised_m_imputed']:,.0f}M | ⚡ Efficiency: {comp['capital_efficiency_ratio']:.1f}x
+                    📍 {comp['city']}, {comp['country']} | 🗓️ Joined: {comp['year_joined']} | ⚡ Velocity: ${comp['valuation_velocity_b']:.1f}B/yr
                 </div>
                 <div style="color: #64748B; font-size: 0.8rem; margin-top: 3px;">
                     Lead Investors: {comp['select_investors']}
@@ -433,41 +435,39 @@ with tab2:
             """, unsafe_allow_html=True)
 
 # =====================================================================
-# TAB 3: Capital Efficiency & Outlier Screener (Residual Analysis)
+# TAB 3: Velocity & Decacorn Screener
 # =====================================================================
 with tab3:
-    st.subheader("Capital Efficiency Matrix: Who Created Real Value?")
+    st.subheader("Valuation Velocity & Decacorn Alpha Screener")
     st.markdown("""
-    In venture capital, **Total Funding Raised** is an input; **Enterprise Valuation** is an output.
-    By plotting both on a logarithmic scale and computing **Residuals** ($\text{Actual} - \text{Predicted}$), we classify startups into **Capital-Efficient Kings** vs. **Capital Guzzlers**.
+    By analyzing **Unicorn Tenure (Years)** against **Post-Money Valuation ($B)** on a logarithmic scale, we detect the **Decacorn Alpha** cohort—companies that scaled to tens or hundreds of billions in record time.
     """)
 
-    # Efficiency Scatter Plot
+    # Velocity Scatter Plot
     fig_scatter = px.scatter(
         df,
-        x="total_raised_m_imputed",
+        x="tenure_years",
         y="valuation_b",
         color="efficiency_tier",
         hover_name="Company",
-        log_x=True,
         log_y=True,
         hover_data={
             "valuation_b": ":$.1fB",
-            "total_raised_m_imputed": ":$,.0fM",
-            "capital_efficiency_ratio": ":.1fx",
-            "residual_pct": ":+.1f%",
+            "year_joined": True,
+            "valuation_velocity_b": ":$.1fB/yr",
             "clean_industry": True,
-            "city": True
+            "city": True,
+            "country": True
         },
         labels={
-            "total_raised_m_imputed": "Total Equity Capital Raised ($M, Log Scale)",
-            "valuation_b": "Actual Post-Money Valuation ($B, Log Scale)",
-            "efficiency_tier": "Efficiency Classification"
+            "tenure_years": "Operating Horizon as Unicorn (Years)",
+            "valuation_b": "Post-Money Valuation ($B, Log Scale)",
+            "efficiency_tier": "Valuation Classification"
         },
         color_discrete_map={
-            "Capital-Efficient Alpha (Undervalued / High Yield)": "#10B981",
+            "Decacorn Alpha (Exceeds Market Trajectory)": "#10B981",
             "Fair Market Valuation": "#38BDF8",
-            "Capital Guzzler (Over-Funded Relative to Value)": "#F43F5E"
+            "Valuation Discounted / Stagnant": "#F43F5E"
         },
         template="plotly_dark"
     )
@@ -479,29 +479,26 @@ with tab3:
 
     col_alpha, col_guzz = st.columns(2)
     with col_alpha:
-        st.write("##### 🚀 Top 10 Capital-Efficient Alpha Startups")
-        st.caption("Companies that achieved massive enterprise valuations while raising minimal outside equity.")
-        top_alpha = df.sort_values(by="capital_efficiency_ratio", ascending=False)[
-            ["Company", "clean_industry", "valuation_b", "total_raised_m_imputed", "capital_efficiency_ratio"]
+        st.write("##### 🚀 Top 10 Highest Valuation Velocity Titans")
+        st.caption("Companies creating the largest annual enterprise valuation since inception.")
+        top_alpha = df.sort_values(by="valuation_velocity_b", ascending=False)[
+            ["Company", "clean_industry", "valuation_b", "year_joined", "valuation_velocity_b"]
         ].head(10)
-        top_alpha.columns = ["Company", "Industry", "Valuation ($B)", "Raised ($M)", "Valuation/Raised"]
+        top_alpha.columns = ["Company", "Industry", "Valuation ($B)", "Year Joined", "Velocity ($B/yr)"]
         st.dataframe(top_alpha.style.format({
-            "Valuation ($B)": "${:.2f}B",
-            "Raised ($M)": "${:,.0f}M",
-            "Valuation/Raised": "{:.1f}x"
+            "Valuation ($B)": "${:.1f}B",
+            "Velocity ($B/yr)": "${:.1f}B/yr"
         }), use_container_width=True)
 
     with col_guzz:
-        st.write("##### ⚠️ Top 10 Capital-Intensive Startups")
-        st.caption("Companies with substantial capital raised relative to their current post-money valuation.")
-        top_guzzlers = df.sort_values(by="capital_efficiency_ratio", ascending=True)[
-            ["Company", "clean_industry", "valuation_b", "total_raised_m_imputed", "capital_efficiency_ratio"]
+        st.write("##### 🌐 Top Frontier AI & Machine Learning Leaders")
+        st.caption("The vanguard of foundation model creators and generative AI platforms.")
+        top_ai = df[df["is_ai_frontier"] == 1].sort_values(by="valuation_b", ascending=False)[
+            ["Company", "clean_industry", "valuation_b", "city", "country"]
         ].head(10)
-        top_guzzlers.columns = ["Company", "Industry", "Valuation ($B)", "Raised ($M)", "Valuation/Raised"]
-        st.dataframe(top_guzzlers.style.format({
-            "Valuation ($B)": "${:.2f}B",
-            "Raised ($M)": "${:,.0f}M",
-            "Valuation/Raised": "{:.1f}x"
+        top_ai.columns = ["Company", "Industry", "Valuation ($B)", "City", "Country"]
+        st.dataframe(top_ai.style.format({
+            "Valuation ($B)": "${:.1f}B"
         }), use_container_width=True)
 
 # =====================================================================
@@ -510,26 +507,31 @@ with tab3:
 with tab4:
     st.subheader("Statistical Diagnostics, Benchmark & VC Elasticity")
     st.markdown("""
-    This section satisfies all academic and midterm evaluation criteria: 5-Fold cross-validation benchmarks, log-normal distribution modeling, and feature elasticity weights.
+    Empirical evaluation of factors driving private tech valuations across 1,447 global unicorns.
     """)
 
     b1, b2, b3 = st.columns(3)
     with b1:
-        st.metric("Test Set Log R² Score", f"{bundle['test_r2']:.4f}", "+50% variance explained")
+        st.metric("Total Sample Size", f"{len(df):,} Unicorns", "+400 modern additions")
     with b2:
-        st.metric("5-Fold Cross-Val Mean R²", f"{bundle['cv_r2']:.4f}", "Cross-validated stability")
+        st.metric("Test Set Log R² Score", f"{bundle['test_r2']:.4f}", "Cross-validated holdout")
     with b3:
         st.metric("Selected Model Architecture", bundle['model_name'], "Non-linear tree ensemble")
 
     st.write("---")
     st.write("##### 🎯 Feature Elasticity & Valuation Premiums (Ridge Regression)")
-    st.markdown("Percentage change in expected post-money valuation associated with a 1-unit or dummy shift in each feature, holding other variables constant.")
+    st.markdown("Percentage change in expected post-money valuation associated with each attribute, holding other variables constant.")
 
     coef_df = bundle["coefficients"].copy()
-    coef_df = coef_df[coef_df["feature"] != "clean_industry_Other"]
-    
-    # Prettify labels
-    coef_df["Display Name"] = coef_df["feature"].str.replace("clean_industry_", "Sector: ").str.replace("hub_category_", "Hub: ").str.replace("has_", "Backer: ")
+    coef_df["Display Name"] = (
+        coef_df["feature"]
+        .str.replace("clean_industry_", "Sector: ")
+        .str.replace("hub_category_", "Hub: ")
+        .str.replace("has_", "Backer: ")
+        .str.replace("is_ai_frontier", "⚡ Frontier AI Status")
+        .str.replace("tenure_years", "⏳ Tenure (Years)")
+        .str.replace("investors_count", "🤝 Investor Count")
+    )
 
     fig_coef = px.bar(
         coef_df.sort_values(by="coefficient", ascending=True),
@@ -546,12 +548,12 @@ with tab4:
 
     with st.expander("📚 Methodology & Academic Defense Notes (Click to expand)"):
         st.markdown(r"""
-        1. **Why Log-Scale Transformation?**
-           Startup valuations and funding totals adhere strictly to a **Pareto / Power-Law Distribution** (skewness $> 8.0$). Naive OLS linear regression on raw dollar amounts creates severe heteroscedasticity and nonsensical negative valuation predictions. Modeling in log-space ($\log(y) = \mathbf{w}^T \mathbf{x}$) linearizes exponential growth dynamics and guarantees positive predictions upon exponentiation.
+        1. **Power-Law Dynamics & Log-Scale Modeling:**
+           Startup valuations exhibit heavy-tailed **Pareto / Power-Law distributions** where decacorns and centicorns (OpenAI, Anthropic, ByteDance) account for a disproportionate share of global value. Modeling $\log(\text{Valuation})$ stabilizes variance, linearizes multiplicative returns, and ensures positive predictions.
            
-        2. **Why Tree Ensembles Outperform Linear Models:**
-           In venture capital, feature relationships are heavily non-linear. Raising $50M in Generative AI in San Francisco produces a compounding multiple expansion that is not purely additive. Random Forest captures these high-order feature interactions, boosting $R^2$ from 0.28 (Ridge) to 0.50.
+        2. **Frontier AI Multiple Expansion:**
+           Empirical regression demonstrates an estimated **+78.6% valuation premium** associated with frontier AI positioning over equivalent traditional SaaS companies, reflecting extreme investor demand for foundation model capabilities.
            
-        3. **Addressing Selection Bias:**
-           This dataset exclusively examines startups that crossed the $1B valuation threshold. It models **conditional valuation given unicorn scale**, isolating what separates a $1B unicorn from a $50B decacorn.
+        3. **Investor Network Capital:**
+           Having Tier-1 venture capital backing (Sequoia, Google, SoftBank, a16z, Khosla) commands a **40% to 77% valuation multiplier**, capturing signal value, syndicate power, and competitive deal heat.
         """)

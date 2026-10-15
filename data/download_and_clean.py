@@ -1,14 +1,12 @@
 import os
 import re
-import urllib.request
 import pandas as pd
 import numpy as np
 
-RAW_DATA_PATH = "data/raw/Unicorn_Companies.csv"
+RAW_DATA_PATH = "data/raw/cbinsights_unicorns.csv"
 PROCESSED_DATA_PATH = "data/processed/cleaned_unicorns.csv"
-DATA_URL = "https://raw.githubusercontent.com/Andres1984/Data-Analysis-with-R/master/Unicorn_Companies.csv"
 
-# Global City to Lat/Lon mapping for top startup hubs
+# Global City coordinates mapping for top tech hubs
 CITY_COORDINATES = {
     # US Hubs
     "San Francisco": (37.7749, -122.4194),
@@ -21,8 +19,11 @@ CITY_COORDINATES = {
     "San Mateo": (37.5630, -122.3255),
     "Santa Clara": (37.3541, -121.9552),
     "Menlo Park": (37.4529, -122.1817),
+    "Oakland": (37.8044, -122.2712),
+    "Berkeley": (37.8715, -122.2730),
     "Los Angeles": (34.0522, -118.2437),
     "Culver City": (34.0211, -118.3965),
+    "Santa Monica": (34.0195, -118.4912),
     "Seattle": (47.6062, -122.3321),
     "Bellevue": (47.6101, -122.2015),
     "Boston": (42.3601, -71.0589),
@@ -31,13 +32,16 @@ CITY_COORDINATES = {
     "Chicago": (41.8781, -87.6298),
     "Atlanta": (33.7490, -84.3880),
     "Denver": (39.7392, -104.9903),
+    "Boulder": (40.0150, -105.2705),
     "San Diego": (32.7157, -117.1611),
     "Miami": (25.7617, -80.1918),
     "Philadelphia": (39.9526, -75.1652),
     "Salt Lake City": (40.7608, -111.8910),
     "Lehi": (40.3916, -111.8508),
     "Dallas": (32.7767, -96.7970),
+    "Plano": (33.0198, -96.6989),
     "Washington": (38.9072, -77.0369),
+    "Pittsburgh": (40.4406, -79.9959),
 
     # China / Asia Hubs
     "Beijing": (39.9042, 116.4074),
@@ -46,6 +50,8 @@ CITY_COORDINATES = {
     "Hangzhou": (30.2741, 120.1551),
     "Guangzhou": (23.1291, 113.2644),
     "Chengdu": (30.5728, 104.0668),
+    "Wuhan": (30.5928, 114.3055),
+    "Nanjing": (32.0603, 118.7969),
     "Hong Kong": (22.3193, 114.1694),
     "Singapore": (1.3521, 103.8198),
     "Tokyo": (35.6762, 139.6503),
@@ -57,6 +63,9 @@ CITY_COORDINATES = {
     "Gurgaon": (28.4595, 77.0266),
     "New Delhi": (28.6139, 77.2090),
     "Noida": (28.5355, 77.3910),
+    "Pune": (18.5204, 73.8567),
+    "Hyderabad": (17.3850, 78.4867),
+    "Chennai": (13.0827, 80.2707),
     "Jakarta": (-6.2088, 106.8456),
 
     # Europe Hubs
@@ -77,22 +86,28 @@ CITY_COORDINATES = {
     "Brussels": (50.8503, 4.3517),
     "Copenhagen": (55.6761, 12.5683),
     "Oslo": (59.9139, 10.7522),
+    "Milan": (45.4642, 9.1900),
+    "Rome": (41.9028, 12.4964),
 
-    # Middle East / LATAM / Oceania
+    # Middle East / LATAM / Oceania / Canada
     "Tel Aviv": (32.0853, 34.7818),
     "Herzliya": (32.1663, 34.8433),
     "Jerusalem": (31.7683, 35.2137),
     "Dubai": (25.2048, 55.2708),
+    "Riyadh": (24.7136, 46.6753),
     "Sao Paulo": (-23.5505, -46.6333),
     "SÃ£o Paulo": (-23.5505, -46.6333),
     "Buenos Aires": (-34.6037, -58.3816),
     "Mexico City": (19.4326, -99.1332),
     "Bogota": (4.7110, -74.0721),
+    "Santiago": (-33.4489, -70.6693),
     "Sydney": (-33.8688, 151.2093),
     "Melbourne": (-37.8136, 144.9631),
+    "Brisbane": (-27.4698, 153.0251),
     "Toronto": (43.6532, -79.3832),
     "Vancouver": (49.2827, -123.1207),
-    "Montreal": (45.5017, -73.5673)
+    "Montreal": (45.5017, -73.5673),
+    "Waterloo": (43.4643, -80.5204)
 }
 
 COUNTRY_FALLBACK_COORDINATES = {
@@ -118,62 +133,41 @@ COUNTRY_FALLBACK_COORDINATES = {
     "Norway": (60.4720, 8.4689),
     "Estonia": (58.5953, 25.0136),
     "Ireland": (53.1424, -7.6921),
-    "United Arab Emirates": (23.4241, 53.8478)
+    "United Arab Emirates": (23.4241, 53.8478),
+    "Finland": (61.9241, 25.7482),
+    "Denmark": (56.2639, 9.5018),
+    "Belgium": (50.5039, 4.4699),
+    "Austria": (47.5162, 14.5501),
+    "Italy": (41.8719, 12.5674),
+    "Colombia": (4.5709, -74.2973),
+    "Chile": (-35.6751, -71.5430),
+    "South Africa": (-30.5595, 22.9375),
+    "Vietnam": (14.0583, 108.2772),
+    "Thailand": (15.8700, 100.9925),
+    "Philippines": (12.8797, 121.7740),
+    "Saudi Arabia": (23.8859, 45.0792)
 }
-
-def parse_currency_to_millions(val_str):
-    if pd.isna(val_str) or not isinstance(val_str, str):
-        return np.nan
-    val_str = val_str.strip().replace("$", "").replace(",", "")
-    if val_str.lower() in ["none", "unknown", ""]:
-        return np.nan
-    try:
-        if val_str.endswith("B"):
-            return float(val_str[:-1]) * 1000.0
-        elif val_str.endswith("M"):
-            return float(val_str[:-1])
-        elif val_str.endswith("K"):
-            return float(val_str[:-1]) / 1000.0
-        else:
-            return float(val_str)
-    except Exception:
-        return np.nan
 
 def clean_industry(ind):
     if pd.isna(ind):
-        return "Other"
-    ind = str(ind).strip()
-    # Normalize common variations
-    mapping = {
-        "Artificial Intelligence": "Artificial Intelligence",
-        "Artificial intelligence": "Artificial Intelligence",
-        "Fintech": "Fintech",
-        "Finttech": "Fintech",
-        "Internet software & services": "Internet Software & Services",
-        "E-commerce & direct-to-consumer": "E-Commerce & DTC",
-        "Supply chain, logistics, & delivery": "Supply Chain & Logistics",
-        "Data management & analytics": "Data Management & Analytics",
-        "Mobile & telecommunications": "Mobile & Telecom",
-        "Auto & transportation": "Auto & Transportation",
-        "Consumer & retail": "Consumer & Retail",
-        "Health": "HealthTech & Bio",
-        "Cybersecurity": "Cybersecurity",
-        "Hardware": "Hardware & IoT",
-        "Edtech": "EdTech",
-        "Travel": "Travel & Hospitality"
-    }
-    valid_industries = set(mapping.values())
-    for key, target in mapping.items():
-        if ind.lower() == key.lower():
-            return target
-    if ind in valid_industries:
-        return ind
-    return "Other"
+        return "Enterprise Tech"
+    ind_s = str(ind).strip()
+    if ind_s in ["Industrial", "Industrials"]:
+        return "Industrials"
+    elif ind_s in ["Health", "Healthcare & Life Sciences"]:
+        return "Healthcare & Life Sciences"
+    elif ind_s == "West Palm Beach":
+        return "Enterprise Tech"
+    elif ind_s in ["Insurance", "Financial Services"]:
+        return "Financial Services"
+    elif ind_s in ["Consumer & Retail", "Media & Entertainment", "Enterprise Tech"]:
+        return ind_s
+    return "Enterprise Tech"
 
 def get_hub_category(city, country):
     city_s = str(city).strip()
     country_s = str(country).strip()
-    
+
     bay_area = ["San Francisco", "Palo Alto", "Mountain View", "San Jose", "Sunnyvale", 
                 "Redwood City", "San Mateo", "Santa Clara", "Menlo Park", "Oakland", "Berkeley"]
     if city_s in bay_area:
@@ -182,124 +176,131 @@ def get_hub_category(city, country):
         return "New York City"
     elif country_s == "United States":
         return "Other US Hubs"
-    elif city_s in ["Beijing", "Shanghai", "Shenzhen", "Hangzhou"]:
+    elif city_s in ["Beijing", "Shanghai", "Shenzhen", "Hangzhou", "Guangzhou", "Chengdu", "Wuhan", "Nanjing"] or country_s == "China":
         return "China Tech Hubs"
-    elif city_s in ["London", "Dublin", "Cambridge", "Oxford"]:
-        return "UK Hubs"
-    elif city_s in ["Berlin", "Munich", "Paris", "Amsterdam", "Stockholm"]:
+    elif city_s in ["London", "Dublin", "Cambridge", "Oxford"] or country_s == "United Kingdom":
+        return "UK & Ireland"
+    elif country_s in ["Germany", "France", "Netherlands", "Sweden", "Switzerland", "Spain", "Estonia", "Finland", "Norway", "Denmark", "Belgium", "Austria", "Italy"]:
         return "Europe Hubs"
-    elif city_s in ["Bengaluru", "Bangalore", "Mumbai", "Gurugram", "New Delhi"]:
+    elif country_s == "India" or city_s in ["Bengaluru", "Bangalore", "Mumbai", "Gurugram", "New Delhi", "Noida", "Pune", "Hyderabad", "Chennai"]:
         return "India Tech Hubs"
-    elif city_s in ["Tel Aviv", "Herzliya", "Jerusalem"]:
+    elif country_s == "Israel" or city_s in ["Tel Aviv", "Herzliya", "Jerusalem"]:
         return "Israel Hubs"
     else:
         return "Global Other"
 
-def download_and_clean():
-    print(f"1. Downloading raw data from {DATA_URL}...")
-    urllib.request.urlretrieve(DATA_URL, RAW_DATA_PATH)
-    df = pd.read_csv(RAW_DATA_PATH, encoding="latin-1")
+AI_FRONTIER_COMPANIES = {
+    "Anthropic", "OpenAI", "DeepSeek", "Cognition", "Moonshot AI", "Databricks", 
+    "Scale AI", "Mistral AI", "Mistral", "xAI", "Cohere", "Perplexity", "Glean", 
+    "Harvey", "Adept", "Figure", "Groq", "Etched", "Stability AI", "ElevenLabs", 
+    "Character.ai", "Synthesia", "Runway", "Hugging Face", "Midjourney", "Anyscale",
+    "Together AI", "Poolside", "Cerebras Systems", "Shield AI", "Anduril"
+}
+
+def clean_and_process():
+    print(f"Loading raw dataset from {RAW_DATA_PATH}...")
+    df = pd.read_csv(RAW_DATA_PATH)
     print(f"Raw shape: {df.shape}")
 
-    # Standardize column names
-    df.rename(columns={
-        "Valuation ($B)": "valuation_raw",
-        "Select Inverstors": "select_investors",
-        "Select Investors": "select_investors",
-        "Date Joined": "date_joined",
-        "Country": "country",
-        "City": "city",
-        "Industry": "industry",
-        "Founded Year": "founded_year",
-        "Total Raised": "total_raised_raw",
-        "Investors Count": "investors_count",
-        "Deal Terms": "deal_terms"
-    }, inplace=True)
-
     # 1. Clean Valuation
-    df["valuation_b"] = df["valuation_raw"].astype(str).str.replace("$", "").str.replace(",", "").astype(float)
+    df["valuation_b"] = df["Valuation ($B)"].astype(str).str.replace("$", "").str.replace(",", "").astype(float)
     df["valuation_m"] = df["valuation_b"] * 1000.0
 
-    # 2. Clean Total Raised
-    df["total_raised_m"] = df["total_raised_raw"].apply(parse_currency_to_millions)
-    # For missing total raised, impute sector median or overall median
-    median_raised = df["total_raised_m"].median()
-    df["total_raised_m_imputed"] = df["total_raised_m"].fillna(median_raised)
+    # 2. Clean Dates and Unicorn Tenure
+    df["date_joined"] = pd.to_datetime(df["Date Joined"], errors="coerce")
+    df["year_joined"] = df["date_joined"].dt.year
+    # Impute missing years with median year
+    median_year = df["year_joined"].median()
+    df["year_joined"] = df["year_joined"].fillna(median_year).astype(int)
+    # Calculate years active as unicorn up to current observation horizon (2026)
+    df["tenure_years"] = (2026 - df["year_joined"]).clip(lower=0.5)
 
-    # 3. Clean Dates and Years to Unicorn
-    df["year_joined"] = pd.to_datetime(df["date_joined"], errors="coerce").dt.year
-    df["founded_year"] = pd.to_numeric(df["founded_year"], errors="coerce")
-    
-    # Calculate years to unicorn
-    df["years_to_unicorn"] = df["year_joined"] - df["founded_year"]
-    # Handle anomalies (clip between 1 and 25 years)
-    median_years = df.loc[(df["years_to_unicorn"] >= 0) & (df["years_to_unicorn"] <= 30), "years_to_unicorn"].median()
-    df["years_to_unicorn"] = df["years_to_unicorn"].apply(lambda y: y if (pd.notna(y) and 0 <= y <= 35) else median_years)
+    # 3. Clean Geography
+    df["Country"] = df["Country"].fillna("United States")
+    df["City"] = df["City"].fillna("Other / Remote")
+    df["country"] = df["Country"].str.strip()
+    df["city"] = df["City"].str.strip()
+    df["hub_category"] = df.apply(lambda r: get_hub_category(r["city"], r["country"]), axis=1)
 
     # 4. Clean Industry
-    df["clean_industry"] = df["industry"].apply(clean_industry)
+    df["clean_industry"] = df["Industry"].apply(clean_industry)
 
-    # 5. Investor Signals
-    investor_col = df["select_investors"].fillna("").astype(str)
-    df["has_sequoia"] = investor_col.str.contains("Sequoia", case=False).astype(int)
-    df["has_a16z"] = investor_col.str.contains("Andreessen|a16z", case=False).astype(int)
-    df["has_softbank"] = investor_col.str.contains("SoftBank|Softbank", case=False).astype(int)
-    df["has_tiger"] = investor_col.str.contains("Tiger Global", case=False).astype(int)
-    df["has_accel"] = investor_col.str.contains("Accel", case=False).astype(int)
+    # 5. Frontier AI / DeepTech Indicator
+    def detect_ai_frontier(comp, ind, investors):
+        comp_s = str(comp).strip()
+        if comp_s in AI_FRONTIER_COMPANIES:
+            return 1
+        name_lower = comp_s.lower()
+        if any(kw in name_lower for kw in ["ai", "robotics", "deep", "neural", "intelligence", "cognitive", "data"]):
+            if ind == "Enterprise Tech":
+                return 1
+        return 0
+
+    df["is_ai_frontier"] = df.apply(lambda r: detect_ai_frontier(r["Company"], r["clean_industry"], r["Select Investors"]), axis=1)
+
+    # 6. Investor Signals & Network Capital
+    inv_series = df["Select Investors"].fillna("").astype(str)
+    df["investors_count"] = inv_series.apply(lambda x: len([s for s in x.split(",") if s.strip()]) if x else 1)
+    
+    df["has_sequoia"] = inv_series.str.contains("Sequoia", case=False).astype(int)
+    df["has_a16z"] = inv_series.str.contains("Andreessen|a16z", case=False).astype(int)
+    df["has_khosla"] = inv_series.str.contains("Khosla", case=False).astype(int)
+    df["has_thrive"] = inv_series.str.contains("Thrive", case=False).astype(int)
+    df["has_google"] = inv_series.str.contains("Google|GV|capitalG", case=False).astype(int)
+    df["has_softbank"] = inv_series.str.contains("SoftBank|Softbank", case=False).astype(int)
+    df["has_accel"] = inv_series.str.contains("Accel", case=False).astype(int)
+    df["has_tiger"] = inv_series.str.contains("Tiger Global", case=False).astype(int)
     df["has_tier1_investor"] = (
         (df["has_sequoia"] == 1) | 
         (df["has_a16z"] == 1) | 
+        (df["has_khosla"] == 1) | 
+        (df["has_thrive"] == 1) | 
+        (df["has_google"] == 1) | 
         (df["has_softbank"] == 1) | 
-        (df["has_tiger"] == 1) | 
-        (df["has_accel"] == 1)
+        (df["has_accel"] == 1) | 
+        (df["has_tiger"] == 1)
     ).astype(int)
 
-    # 6. Deal terms & Investors count
-    df["investors_count"] = df["investors_count"].fillna(df["investors_count"].median())
-    df["deal_terms"] = df["deal_terms"].fillna(df["deal_terms"].median())
-
-    # 7. Hub Categories
-    df["hub_category"] = df.apply(lambda r: get_hub_category(r["city"], r["country"]), axis=1)
-
-    # 8. Geocoding
+    # 7. Coordinates Geocoding
     lats = []
     lons = []
+    np.random.seed(42)
     for _, row in df.iterrows():
-        city = str(row["city"]).strip()
-        country = str(row["country"]).strip()
-        if city in CITY_COORDINATES:
-            coords = CITY_COORDINATES[city]
-        elif country in COUNTRY_FALLBACK_COORDINATES:
-            # Add slight jitter so multiple companies in same country don't overlap completely
-            base_lat, base_lon = COUNTRY_FALLBACK_COORDINATES[country]
-            jitter_lat = base_lat + np.random.uniform(-0.15, 0.15)
-            jitter_lon = base_lon + np.random.uniform(-0.15, 0.15)
-            coords = (jitter_lat, jitter_lon)
+        c_city = str(row["city"]).strip()
+        c_country = str(row["country"]).strip()
+        if c_city in CITY_COORDINATES:
+            base_lat, base_lon = CITY_COORDINATES[c_city]
+            coords = (base_lat + np.random.uniform(-0.04, 0.04), base_lon + np.random.uniform(-0.04, 0.04))
+        elif c_country in COUNTRY_FALLBACK_COORDINATES:
+            base_lat, base_lon = COUNTRY_FALLBACK_COORDINATES[c_country]
+            coords = (base_lat + np.random.uniform(-0.25, 0.25), base_lon + np.random.uniform(-0.25, 0.25))
         else:
-            coords = (20.0 + np.random.uniform(-5, 5), 0.0 + np.random.uniform(-5, 5))
-        lats.append(coords[0])
-        lons.append(coords[1])
-        
+            coords = (25.0 + np.random.uniform(-3, 3), 10.0 + np.random.uniform(-3, 3))
+        lats.append(round(coords[0], 4))
+        lons.append(round(coords[1], 4))
+
     df["latitude"] = lats
     df["longitude"] = lons
 
-    # 9. Capital Efficiency Ratio = Valuation ($M) / (Total Raised ($M))
-    df["capital_efficiency_ratio"] = (df["valuation_m"] / (df["total_raised_m_imputed"] + 1.0)).round(2)
-
-    # 10. Select final clean columns
-    cols = [
-        "Company", "valuation_b", "valuation_m", "total_raised_m", "total_raised_m_imputed",
-        "clean_industry", "country", "city", "hub_category", "latitude", "longitude",
-        "founded_year", "year_joined", "years_to_unicorn", "investors_count", "deal_terms",
-        "has_tier1_investor", "has_sequoia", "has_a16z", "has_softbank", "has_tiger",
-        "select_investors", "capital_efficiency_ratio"
+    # 8. Capital Efficiency & Valuation Velocity Metrics
+    # Valuation velocity: valuation added per year as unicorn ($B/year)
+    df["valuation_velocity_b"] = (df["valuation_b"] / df["tenure_years"]).round(2)
+    
+    # 9. Clean Select Columns
+    final_cols = [
+        "Company", "valuation_b", "valuation_m", "clean_industry", "country", "city",
+        "hub_category", "latitude", "longitude", "date_joined", "year_joined", "tenure_years",
+        "investors_count", "is_ai_frontier", "has_tier1_investor", "has_sequoia", "has_a16z",
+        "has_khosla", "has_thrive", "has_google", "has_softbank", "has_accel", "has_tiger",
+        "Select Investors", "valuation_velocity_b"
     ]
-    df_clean = df[cols].copy()
+    df_clean = df[final_cols].rename(columns={"Select Investors": "select_investors"})
+    
     df_clean.to_csv(PROCESSED_DATA_PATH, index=False)
-    print(f"Cleaned dataset saved to {PROCESSED_DATA_PATH}!")
-    print(f"Processed shape: {df_clean.shape}")
-    print("\nProcessed Summary:")
-    print(df_clean.describe())
+    print(f"Processed dataset saved successfully to {PROCESSED_DATA_PATH}!")
+    print(f"Total processed unicorns: {len(df_clean)}")
+    print("\nTop 5 Companies in Cleaned Dataset:")
+    print(df_clean[["Company", "valuation_b", "clean_industry", "country", "city", "year_joined", "is_ai_frontier"]].head(5))
 
 if __name__ == "__main__":
-    download_and_clean()
+    clean_and_process()

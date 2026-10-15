@@ -6,10 +6,10 @@ notebook = {
             'cell_type': 'markdown',
             'metadata': {},
             'source': [
-                '# 🦄 VenturePulse: Global Startup Valuation & Capital Efficiency\n',
+                '# 🦄 VenturePulse: Global Startup Valuation & Market Intelligence\n',
                 '### CMSE 830 - Midterm Project Analysis & Empirical Modeling\n',
                 '\n',
-                '**Research Question:** *To what extent can private tech startup valuations be quantitatively modeled using capital raised, sector, geography, age, and investor network—and who are the true capital-efficient outliers?*'
+                '**Research Question:** *To what extent can private tech valuations across 1,447 global unicorns (including OpenAI, Anthropic, DeepSeek, and ByteDance) be quantitatively modeled using investor network capital, sector, geographic hub, and frontier AI signals?*'
             ]
         },
         {
@@ -24,14 +24,13 @@ notebook = {
                 'import seaborn as sns\n',
                 'import pickle\n',
                 '\n',
-                '# Configure plots\n',
                 'plt.style.use("seaborn-v0_8-whitegrid")\n',
                 'sns.set_palette("muted")\n',
                 '\n',
-                '# Load processed dataset\n',
+                '# Load processed 1,447 unicorns dataset\n',
                 'df = pd.read_csv("../data/processed/unicorns_with_predictions.csv")\n',
-                'print(f"Loaded {len(df)} unicorns across {df[\'country\'].nunique()} countries.")\n',
-                'df.head(3)'
+                'print(f"Loaded {len(df):,} unicorns across {df[\'country\'].nunique()} countries.")\n',
+                'df.head(5)'
             ]
         },
         {
@@ -39,7 +38,7 @@ notebook = {
             'metadata': {},
             'source': [
                 '## 1. Exploratory Data Analysis: Valuation Distributions & Power Laws\n',
-                'Private tech valuations follow an extreme **Pareto / Power Law distribution**. Below we contrast the raw skewed distribution with the log-transformed distribution.'
+                'We contrast the extreme skew of raw startup valuations with the linearized log-transformed distribution.'
             ]
         },
         {
@@ -51,7 +50,7 @@ notebook = {
                 'fig, axes = plt.subplots(1, 2, figsize=(14, 5))\n',
                 '\n',
                 'sns.histplot(df["valuation_b"], bins=30, kde=True, ax=axes[0], color="#3b82f6")\n',
-                'axes[0].set_title("Raw Valuation Distribution ($B) - Extreme Positive Skew")\n',
+                'axes[0].set_title("Raw Valuation ($B) - Extreme Power-Law Skew")\n',
                 'axes[0].set_xlabel("Valuation ($B)")\n',
                 '\n',
                 'sns.histplot(np.log1p(df["valuation_m"]), bins=30, kde=True, ax=axes[1], color="#10b981")\n',
@@ -66,8 +65,8 @@ notebook = {
             'cell_type': 'markdown',
             'metadata': {},
             'source': [
-                '## 2. Sector Valuation Multiples & Capital Raised\n',
-                'Examining how total equity capital raised scales into post-money valuation across different tech sectors.'
+                '## 2. Sector Valuation Breakdown\n',
+                'Distribution of enterprise valuations across core industry categories.'
             ]
         },
         {
@@ -77,14 +76,11 @@ notebook = {
             'outputs': [],
             'source': [
                 'plt.figure(figsize=(12, 6))\n',
-                'top_sectors = df["clean_industry"].value_counts().head(8).index\n',
-                'subset = df[df["clean_industry"].isin(top_sectors)]\n',
-                '\n',
-                'sns.boxplot(data=subset, x="clean_industry", y="capital_efficiency_ratio", showfliers=False, palette="viridis")\n',
-                'plt.title("Capital Efficiency Ratio (Valuation / Total Raised) by Sector")\n',
+                'sns.boxplot(data=df, x="clean_industry", y="valuation_b", showfliers=False, palette="viridis")\n',
+                'plt.title("Valuation Distribution by Sector ($B, Excluding Outliers)")\n',
                 'plt.xlabel("Sector")\n',
-                'plt.ylabel("Valuation / Funding Multiple (x)")\n',
-                'plt.xticks(rotation=30, ha="right")\n',
+                'plt.ylabel("Valuation ($B)")\n',
+                'plt.xticks(rotation=25, ha="right")\n',
                 'plt.tight_layout()\n',
                 'plt.show()'
             ]
@@ -119,8 +115,8 @@ notebook = {
             'cell_type': 'markdown',
             'metadata': {},
             'source': [
-                '## 4. Capital Efficiency Residual Analysis\n',
-                'Examining companies that deviate substantially from expected market valuations.'
+                '## 4. Valuation Velocity & Decacorn Screener\n',
+                'Examining companies that scaled to tens or hundreds of billions in record time.'
             ]
         },
         {
@@ -132,16 +128,15 @@ notebook = {
                 'plt.figure(figsize=(10, 6))\n',
                 'sns.scatterplot(\n',
                 '    data=df,\n',
-                '    x="total_raised_m_imputed",\n',
+                '    x="tenure_years",\n',
                 '    y="valuation_b",\n',
                 '    hue="efficiency_tier",\n',
-                '    palette={"Capital-Efficient Alpha (Undervalued / High Yield)": "#10b981", "Fair Market Valuation": "#3b82f6", "Capital Guzzler (Over-Funded Relative to Value)": "#ef4444"},\n',
+                '    palette={"Decacorn Alpha (Exceeds Market Trajectory)": "#10b981", "Fair Market Valuation": "#3b82f6", "Valuation Discounted / Stagnant": "#ef4444"},\n',
                 '    alpha=0.7\n',
                 ')\n',
-                'plt.xscale("log")\n',
                 'plt.yscale("log")\n',
-                'plt.title("Capital Efficiency Matrix: Funding Raised vs Actual Valuation (Log Scale)")\n',
-                'plt.xlabel("Total Equity Capital Raised ($M, Log Scale)")\n',
+                'plt.title("Valuation Velocity: Operating Tenure vs Valuation ($B, Log Scale)")\n',
+                'plt.xlabel("Operating Horizon as Unicorn (Years)")\n',
                 'plt.ylabel("Valuation ($B, Log Scale)")\n',
                 'plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")\n',
                 'plt.tight_layout()\n',
@@ -160,4 +155,4 @@ notebook = {
 with open('notebooks/01_eda_and_modeling.ipynb', 'w') as f:
     json.dump(notebook, f, indent=2)
 
-print('Jupyter notebook generated successfully at notebooks/01_eda_and_modeling.ipynb!')
+print('Jupyter notebook regenerated successfully for 1,447 unicorns!')

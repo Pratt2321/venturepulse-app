@@ -8,30 +8,29 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import Ridge
-from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+from sklearn.metrics import r2_score, mean_absolute_error
 
 PROCESSED_DATA_PATH = "data/processed/cleaned_unicorns.csv"
 MODEL_SAVE_PATH = "models/valuation_pipeline.pkl"
 RESULTS_DATA_PATH = "data/processed/unicorns_with_predictions.csv"
 
 def train_and_evaluate():
-    print("Loading cleaned dataset...")
+    print("Loading cleaned dataset (1,447 unicorns)...")
     df = pd.read_csv(PROCESSED_DATA_PATH)
 
-    # Feature engineering for modeling
-    df["log_total_raised"] = np.log1p(df["total_raised_m_imputed"])
     df["log_valuation"] = np.log1p(df["valuation_m"])
 
-    # Categorical and numerical features
-    numeric_features = ["log_total_raised", "years_to_unicorn", "investors_count", "deal_terms"]
-    binary_features = ["has_tier1_investor", "has_sequoia", "has_a16z", "has_softbank", "has_tiger"]
+    numeric_features = ["tenure_years", "investors_count"]
+    binary_features = [
+        "is_ai_frontier", "has_tier1_investor", "has_sequoia", "has_a16z",
+        "has_khosla", "has_thrive", "has_google", "has_softbank", "has_accel", "has_tiger"
+    ]
     categorical_features = ["clean_industry", "hub_category"]
 
     feature_cols = numeric_features + binary_features + categorical_features
     X = df[feature_cols].copy()
     y = df["log_valuation"].values
 
-    # Preprocessing pipeline
     preprocessor = ColumnTransformer(
         transformers=[
             ("num", StandardScaler(), numeric_features),
@@ -40,14 +39,12 @@ def train_and_evaluate():
         ]
     )
 
-    # Train / Test split (80/20)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
 
-    # Candidate models
     models = {
         "Ridge Regression (Interpretable)": Ridge(alpha=1.0),
-        "Random Forest Regressor": RandomForestRegressor(n_estimators=150, max_depth=8, random_state=42),
-        "Gradient Boosting Regressor": GradientBoostingRegressor(n_estimators=150, learning_rate=0.08, max_depth=4, random_state=42)
+        "Random Forest Regressor": RandomForestRegressor(n_estimators=180, max_depth=8, random_state=42),
+        "Gradient Boosting Regressor": GradientBoostingRegressor(n_estimators=180, learning_rate=0.06, max_depth=4, random_state=42)
     }
 
     best_model_name = None
@@ -77,7 +74,6 @@ def train_and_evaluate():
     y_test_pred_log = best_pipeline.predict(X_test)
     test_r2 = r2_score(y_test, y_test_pred_log)
     
-    # Exponentiate back to dollar values for real-world business error
     y_test_actual_m = np.expm1(y_test)
     y_test_pred_m = np.expm1(y_test_pred_log)
     test_mae_m = mean_absolute_error(y_test_actual_m, y_test_pred_m)
@@ -86,7 +82,7 @@ def train_and_evaluate():
     print(f"Test Set Log-Scale R²: {test_r2:.4f}")
     print(f"Test Set Mean Absolute Dollar Error: ${test_mae_m:,.2f} Million")
 
-    # Generate predictions & residuals across entire dataset
+    # Generate predictions across entire dataset
     full_pred_log = best_pipeline.predict(X)
     df["predicted_valuation_m"] = np.expm1(full_pred_log).round(1)
     df["predicted_valuation_b"] = (df["predicted_valuation_m"] / 1000.0).round(2)
@@ -95,26 +91,23 @@ def train_and_evaluate():
     df["residual_m"] = (df["valuation_m"] - df["predicted_valuation_m"]).round(1)
     df["residual_pct"] = ((df["residual_m"] / df["predicted_valuation_m"]) * 100).round(1)
 
-    # Classify Capital Efficiency Status
     def categorize_efficiency(residual_pct):
-        if residual_pct >= 40.0:
-            return "Capital-Efficient Alpha (Undervalued / High Yield)"
-        elif residual_pct <= -30.0:
-            return "Capital Guzzler (Over-Funded Relative to Value)"
+        if residual_pct >= 50.0:
+            return "Decacorn Alpha (Exceeds Market Trajectory)"
+        elif residual_pct <= -25.0:
+            return "Valuation Discounted / Stagnant"
         else:
             return "Fair Market Valuation"
 
     df["efficiency_tier"] = df["residual_pct"].apply(categorize_efficiency)
 
-    # Save augmented dataset
     df.to_csv(RESULTS_DATA_PATH, index=False)
     print(f"\nAugmented dataset with predictions saved to {RESULTS_DATA_PATH}!")
 
-    # Train an interpretable Ridge pipeline for feature coefficient weights
+    # Train Ridge pipeline for feature coefficient weights
     ridge_pipeline = Pipeline(steps=[("preprocessor", preprocessor), ("regressor", Ridge(alpha=1.0))])
     ridge_pipeline.fit(X, y)
 
-    # Extract feature names from preprocessor
     cat_encoder = ridge_pipeline.named_steps["preprocessor"].named_transformers_["cat"]
     cat_names = list(cat_encoder.get_feature_names_out(categorical_features))
     all_feature_names = numeric_features + binary_features + cat_names
@@ -126,10 +119,9 @@ def train_and_evaluate():
         "impact_pct": ((np.exp(ridge_coefs) - 1.0) * 100).round(2)
     }).sort_values(by="coefficient", ascending=False)
 
-    print("\nTop 10 Positive Valuation Drivers (Ridge Elasticity):")
+    print("\nTop 10 Valuation Drivers (Ridge Elasticity):")
     print(coef_df.head(10).to_string(index=False))
 
-    # Save model and metadata bundle
     bundle = {
         "pipeline": best_pipeline,
         "model_name": best_model_name,
