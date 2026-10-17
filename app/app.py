@@ -8,7 +8,6 @@ from utils.model_loader import load_data, load_model_bundle, predict_valuation, 
 # --- Page Config ---
 st.set_page_config(
     page_title="VenturePulse | Global Startup Valuation Intelligence",
-    page_icon="🦄",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -264,10 +263,10 @@ filtered_df = filtered_df[filtered_df["valuation_b"] >= min_val]
 
 # --- Main Tabs ---
 tab1, tab2, tab3, tab4 = st.tabs([
-    "🗺️ Global Unicorn Map",
-    "🎛️ The VC Valuation Simulator",
-    "⚡ Velocity & Decacorn Screener",
-    "📈 Model Diagnostics & Elasticity"
+    "Global Unicorn Map",
+    "The VC Valuation Simulator",
+    "Velocity & Decacorn Screener",
+    "Model Diagnostics & Elasticity"
 ])
 
 # =====================================================================
@@ -502,7 +501,7 @@ with tab2:
         ci_lower_b = pred_res["ci_lower_b"]
         ci_upper_b = pred_res["ci_upper_b"]
 
-        status_text = "🏆 Mega-Decacorn ($10B+)" if pred_val_b >= 10.0 else ("🦄 Unicorn Status ($1B+)" if pred_val_b >= 1.0 else "🌱 Scaling Stage (<$1B)")
+        status_text = "Mega-Decacorn ($10B+)" if pred_val_b >= 10.0 else ("Unicorn Status ($1B+)" if pred_val_b >= 1.0 else "Scaling Stage (<$1B)")
         status_color = "#10B981" if pred_val_b >= 10.0 else ("#38BDF8" if pred_val_b >= 1.0 else "#F59E0B")
 
         st.markdown(f"""
@@ -517,13 +516,13 @@ with tab2:
             <hr style="border-color: rgba(255,255,255,0.1); margin: 16px 0;">
             <div style="display: flex; justify-content: space-between; font-size: 0.95rem;">
                 <div>Cohort Classification: <strong style="color: {status_color};">{status_text}</strong></div>
-                <div>AI Frontier Premium Applied: <strong style="color: {'#10B981' if sim_ai else '#94A3B8'};">{'✅ Active (+78.6%)' if sim_ai else '❌ Inactive'}</strong></div>
+                <div>AI Frontier Premium Applied: <strong style="color: {'#10B981' if sim_ai else '#94A3B8'};">{'Active (+78.6%)' if sim_ai else 'Inactive'}</strong></div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
         st.write("")
-        st.markdown("##### 📌 Nearest Real-World Unicorn Comps")
+        st.markdown("##### Nearest Real-World Unicorn Comps")
         comps = find_closest_comps(df, sim_ind, sim_hub, sim_ai, n=3)
         for _, comp in comps.iterrows():
             st.markdown(f"""
@@ -533,7 +532,7 @@ with tab2:
                     <div style="font-weight: 700; color: #10B981; font-size: 1.15rem;">${comp['valuation_b']:.1f}B Valuation</div>
                 </div>
                 <div style="color: #94A3B8; font-size: 0.85rem; margin-top: 4px;">
-                    📍 {comp['city']}, {comp['country']} | 🗓️ Joined: {comp['year_joined']} | ⚡ Velocity: ${comp['valuation_velocity_b']:.1f}B/yr
+                    {comp['city']}, {comp['country']} | Joined: {comp['year_joined']} | Velocity: ${comp['valuation_velocity_b']:.1f}B/yr
                 </div>
                 <div style="color: #64748B; font-size: 0.8rem; margin-top: 3px;">
                     Lead Investors: {comp['select_investors']}
@@ -586,7 +585,7 @@ with tab3:
 
     col_alpha, col_guzz = st.columns(2)
     with col_alpha:
-        st.write("##### 🚀 Top 10 Highest Valuation Velocity Titans")
+        st.write("##### Top 10 Highest Valuation Velocity Titans")
         st.caption("Companies creating the largest annual enterprise valuation since inception.")
         top_alpha = df.sort_values(by="valuation_velocity_b", ascending=False)[
             ["Company", "clean_industry", "valuation_b", "year_joined", "valuation_velocity_b"]
@@ -598,7 +597,7 @@ with tab3:
         }), use_container_width=True)
 
     with col_guzz:
-        st.write("##### 🌐 Top Frontier AI & Machine Learning Leaders")
+        st.write("##### Top Frontier AI & Machine Learning Leaders")
         st.caption("The vanguard of foundation model creators and generative AI platforms.")
         top_ai = df[df["is_ai_frontier"] == 1].sort_values(by="valuation_b", ascending=False)[
             ["Company", "clean_industry", "valuation_b", "city", "country"]
@@ -626,7 +625,7 @@ with tab4:
         st.metric("Selected Model Architecture", bundle['model_name'], "Non-linear tree ensemble")
 
     st.write("---")
-    st.write("##### 🎯 Feature Elasticity & Valuation Premiums (Ridge Regression)")
+    st.write("##### Feature Elasticity & Valuation Premiums (Ridge Regression)")
     st.markdown("Percentage change in expected post-money valuation associated with each attribute, holding other variables constant.")
 
     coef_df = bundle["coefficients"].copy()
@@ -635,9 +634,9 @@ with tab4:
         .str.replace("clean_industry_", "Sector: ")
         .str.replace("hub_category_", "Hub: ")
         .str.replace("has_", "Backer: ")
-        .str.replace("is_ai_frontier", "⚡ Frontier AI Status")
-        .str.replace("tenure_years", "⏳ Tenure (Years)")
-        .str.replace("investors_count", "🤝 Investor Count")
+        .str.replace("is_ai_frontier", "Frontier AI Status")
+        .str.replace("tenure_years", "Tenure (Years)")
+        .str.replace("investors_count", "Investor Count")
     )
 
     fig_coef = px.bar(
@@ -653,7 +652,7 @@ with tab4:
     fig_coef.update_layout(height=520, margin=dict(l=0, r=0, t=10, b=0), coloraxis_showscale=False)
     st.plotly_chart(fig_coef, use_container_width=True)
 
-    with st.expander("📚 Methodology & Academic Defense Notes (Click to expand)"):
+    with st.expander("Methodology & Academic Defense Notes (Click to expand)"):
         st.markdown(r"""
         1. **Power-Law Dynamics & Log-Scale Modeling:**
            Startup valuations exhibit heavy-tailed **Pareto / Power-Law distributions** where decacorns and centicorns (OpenAI, Anthropic, ByteDance) account for a disproportionate share of global value. Modeling $\log(\text{Valuation})$ stabilizes variance, linearizes multiplicative returns, and ensures positive predictions.
