@@ -509,6 +509,56 @@ with tab2:
         </div>
         """, unsafe_allow_html=True)
 
+        # Dynamic Lead VC Narrative
+        selected_vcs = []
+        if has_seq: selected_vcs.append("Sequoia Capital")
+        if has_a16: selected_vcs.append("a16z")
+        if has_goog: selected_vcs.append("Google / GV")
+        if has_khos: selected_vcs.append("Khosla Ventures")
+        if has_thriv: selected_vcs.append("Thrive Capital")
+        if has_soft: selected_vcs.append("SoftBank")
+        if has_acc: selected_vcs.append("Accel")
+        if has_tig: selected_vcs.append("Tiger Global")
+
+        if len(selected_vcs) == 0:
+            lead_vc_str = "independent institutional investors"
+        elif len(selected_vcs) == 1:
+            lead_vc_str = selected_vcs[0]
+        elif len(selected_vcs) == 2:
+            lead_vc_str = f"{selected_vcs[0]} and {selected_vcs[1]}"
+        else:
+            lead_vc_str = f"{selected_vcs[0]}, {selected_vcs[1]}, and peers"
+
+        # Calculate percentile rank of predicted valuation against the full 1,445-unicorn distribution
+        cohort_pct = int((df["valuation_b"] < pred_val_b).mean() * 100)
+
+        # Dynamic nearest comp via normalized multi-factor distance (valuation + age + hub)
+        comp_subset = df[df["clean_industry"] == sim_ind].copy()
+        if sim_ai and (comp_subset["is_ai_frontier"] == 1).sum() > 0:
+            comp_subset = comp_subset[comp_subset["is_ai_frontier"] == 1].copy()
+
+        val_dist = np.abs(np.log(comp_subset["valuation_b"]) - np.log(pred_val_b))
+        tenure_std = df["tenure_years"].std() or 1.0
+        tenure_dist = np.abs(comp_subset["tenure_years"] - sim_tenure) / tenure_std
+        hub_dist = (comp_subset["hub_category"] != sim_hub).astype(float) * 0.5
+        comp_subset["distance"] = (val_dist * 2.0) + tenure_dist + hub_dist
+
+        nearest_row = comp_subset.sort_values(by="distance").iloc[0]
+        nearest_comp_name = nearest_row["Company"]
+        nearest_comp_val = nearest_row["valuation_b"]
+
+        # UI Story Card Container
+        st.markdown(f"""
+        <div style="background-color: #1E293B; border-left: 4px solid #38BDF8; padding: 18px 22px; border-radius: 8px; margin-top: 18px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);">
+            <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #38BDF8; font-weight: 700; margin-bottom: 8px;">
+                Nearest Rival & Cohort Trajectory
+            </div>
+            <div style="color: #F1F5F9; font-size: 1.05rem; line-height: 1.6;">
+                At <strong>{sim_tenure:.1f} years old</strong> with backing from <strong>{lead_vc_str}</strong>, your <strong>{sim_ind}</strong> profile closely mirrors the early growth trajectory of <strong>{nearest_comp_name}</strong> (${nearest_comp_val:.1f}B). You are currently pacing ahead of <span style="color: #38BDF8; font-weight: 700;">{cohort_pct}%</span> of the global unicorn cohort.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
 
 
 # =====================================================================
