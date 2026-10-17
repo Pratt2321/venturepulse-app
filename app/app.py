@@ -262,10 +262,9 @@ if only_ai:
 filtered_df = filtered_df[filtered_df["valuation_b"] >= min_val]
 
 # --- Main Tabs ---
-tab1, tab2, tab3, tab4 = st.tabs([
+tab1, tab2, tab3 = st.tabs([
     "Global Unicorn Map",
     "The VC Valuation Simulator",
-    "Velocity & Decacorn Screener",
     "Model Diagnostics & Elasticity"
 ])
 
@@ -530,76 +529,9 @@ with tab2:
             """, unsafe_allow_html=True)
 
 # =====================================================================
-# TAB 3: Velocity & Decacorn Screener
+# TAB 3: Model Diagnostics & Elasticity
 # =====================================================================
 with tab3:
-    st.subheader("Valuation Velocity & Decacorn Alpha Screener")
-    st.markdown("""
-    By analyzing **Unicorn Tenure (Years)** against **Post-Money Valuation ($B)** on a logarithmic scale, we detect the **Decacorn Alpha** cohort—companies that scaled to tens or hundreds of billions in record time.
-    """)
-
-    fig_scatter = px.scatter(
-        df,
-        x="tenure_years",
-        y="valuation_b",
-        color="efficiency_tier",
-        hover_name="Company",
-        log_y=True,
-        hover_data={
-            "valuation_b": ":$.1fB",
-            "year_joined": True,
-            "valuation_velocity_b": ":$.1fB/yr",
-            "clean_industry": True,
-            "city": True,
-            "country": True
-        },
-        labels={
-            "tenure_years": "Operating Horizon as Unicorn (Years)",
-            "valuation_b": "Post-Money Valuation ($B, Log Scale)",
-            "efficiency_tier": "Valuation Classification",
-            "clean_industry": "Industry"
-        },
-        color_discrete_map={
-            "Decacorn Alpha (Exceeds Market Trajectory)": "#10B981",
-            "Fair Market Valuation": "#38BDF8",
-            "Valuation Discounted / Stagnant": "#F43F5E"
-        },
-        template="plotly_dark"
-    )
-    fig_scatter.update_layout(
-        height=520,
-        legend=dict(orientation="h", yanchor="bottom", y=-0.25, xanchor="center", x=0.5)
-    )
-    st.plotly_chart(fig_scatter, use_container_width=True)
-
-    col_alpha, col_guzz = st.columns(2)
-    with col_alpha:
-        st.write("##### Top 10 Highest Valuation Velocity Titans")
-        st.caption("Companies creating the largest annual enterprise valuation since inception.")
-        top_alpha = df.sort_values(by="valuation_velocity_b", ascending=False)[
-            ["Company", "clean_industry", "valuation_b", "year_joined", "valuation_velocity_b"]
-        ].head(10)
-        top_alpha.columns = ["Company", "Industry", "Valuation ($B)", "Year Joined", "Velocity ($B/yr)"]
-        st.dataframe(top_alpha.style.format({
-            "Valuation ($B)": "${:.1f}B",
-            "Velocity ($B/yr)": "${:.1f}B/yr"
-        }), use_container_width=True)
-
-    with col_guzz:
-        st.write("##### Top Frontier AI & Machine Learning Leaders")
-        st.caption("The vanguard of foundation model creators and generative AI platforms.")
-        top_ai = df[df["is_ai_frontier"] == 1].sort_values(by="valuation_b", ascending=False)[
-            ["Company", "clean_industry", "valuation_b", "city", "country"]
-        ].head(10)
-        top_ai.columns = ["Company", "Industry", "Valuation ($B)", "City", "Country"]
-        st.dataframe(top_ai.style.format({
-            "Valuation ($B)": "${:.1f}B"
-        }), use_container_width=True)
-
-# =====================================================================
-# TAB 4: Model Diagnostics & Elasticity
-# =====================================================================
-with tab4:
     st.subheader("Statistical Diagnostics, Benchmark & VC Elasticity")
     st.markdown(f"""
     Empirical evaluation of factors driving private tech valuations across {len(df):,} global unicorns.

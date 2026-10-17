@@ -53,19 +53,14 @@ Venture-backed valuations follow an extreme **Pareto / Power-Law Distribution** 
 ---
 
 ## Key Features of the Streamlit Application
-1. **Interactive Global Map:**
+1. **Interactive Global Map & Macro Landscape:**
    * Geospatial natural earth scatter map of all 1,445 unicorns worldwide.
    * Unified 6-industry dark-mode palette (Electric Emerald, Bright Cyan, Coral Pink, Vibrant Purple, Gold/Amber, Muted Slate Grey) with 80% opacity fills and crisp halo borders.
-   * Tightened visual legend and log-scaled bubble sizing preventing trillion-dollar titans from obscuring early-stage unicorns.
-2. **Macro Sector & City Analytics:**
-   * **Total Valuation by Sector ($B):** Linked visual breakdown sorted top-down, led by Enterprise Tech & AI ($3,993.7B).
-   * **Top 10 Global Cities by Unicorn Count:** Focal-highlight categorical scheme spotlighting Silicon Valley concentration (San Francisco [229] and Palo Alto [36] in Electric Sky Blue).
-3. **The VC Valuation Simulator:** Real-time inference engine powered by our trained **Random Forest Regressor** where users select sector, hub location, company maturity, AI frontier status, and investor backing to compute:
+   * Linked visual breakdown for **Total Valuation by Sector ($B)** and **Top 10 Global Cities by Unicorn Count** spotlighting Silicon Valley concentration.
+2. **The VC Valuation Simulator:** Real-time inference engine powered by our trained **Random Forest Regressor** where users select sector, hub location, company maturity, AI frontier status, and investor backing to compute:
    * Fair-Market Valuation with an **80% Confidence Interval**.
-   * Cohort classification (Mega-Decacorn $\ge \$10\text{B}$, Unicorn $\ge \$1\text{B}$, Scaling Stage).
    * Nearest Real-World Unicorn Comps.
-4. **Valuation Velocity Screener:** Scatter plot analyzing operating tenure vs. post-money valuation, identifying the high-velocity decacorns.
-5. **Statistical Diagnostics:** 5-fold cross-validation metrics, Ridge elasticity coefficients, and residual error diagnostics.
+3. **Statistical Diagnostics & Elasticity:** 5-fold cross-validation metrics, Ridge elasticity coefficients, and academic defense methodology notes.
 
 ---
 
