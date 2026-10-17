@@ -4,17 +4,16 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-# Locate the active processed CSV and model bundle
+# Locate the active processed CSV and model bundle dynamically
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_PATHS = [
     "data/processed/unicorns_with_predictions.csv",
-    "/Users/prathampradhan/Developer/CMSE 830/venturepulse-app/data/processed/unicorns_with_predictions.csv",
-    "/Users/prathampradhan/.gemini/antigravity-ide/scratch/venturepulse-app/data/processed/unicorns_with_predictions.csv"
+    os.path.join(BASE_DIR, "data", "processed", "unicorns_with_predictions.csv"),
 ]
 
 MODEL_PATHS = [
     "models/valuation_pipeline.pkl",
-    "/Users/prathampradhan/Developer/CMSE 830/venturepulse-app/models/valuation_pipeline.pkl",
-    "/Users/prathampradhan/.gemini/antigravity-ide/scratch/venturepulse-app/models/valuation_pipeline.pkl"
+    os.path.join(BASE_DIR, "models", "valuation_pipeline.pkl"),
 ]
 
 def get_valid_path(paths):

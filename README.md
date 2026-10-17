@@ -76,12 +76,14 @@ Venture-backed valuations follow an extreme **Pareto / Power-Law Distribution** 
 
 ## 💻 Local Quick Start
 
-### 1. Navigate to Project
+### 1. Clone & Setup
 ```bash
-cd "/Users/prathampradhan/Developer/CMSE 830/venturepulse-app"
+git clone https://github.com/Pratt2321/venturepulse-app.git
+cd venturepulse-app
+pip install -r requirements.txt
 ```
 
-### 2. Run Pipeline (Already Pre-Trained & Ready)
+### 2. Run Pipeline (Optional — Pre-trained Bundle Included)
 ```bash
 python3 data/download_and_clean.py
 python3 models/train_model.py
