@@ -494,27 +494,18 @@ with tab2:
             has_tiger=int(has_tig)
         )
 
-        pred_val_m = pred_res["pred_valuation_m"]
         pred_val_b = pred_res["pred_valuation_b"]
         ci_lower_b = pred_res["ci_lower_b"]
         ci_upper_b = pred_res["ci_upper_b"]
-
-        status_text = "Mega-Decacorn ($10B+)" if pred_val_b >= 10.0 else ("Unicorn Status ($1B+)" if pred_val_b >= 1.0 else "Scaling Stage (<$1B)")
-        status_color = "#10B981" if pred_val_b >= 10.0 else ("#38BDF8" if pred_val_b >= 1.0 else "#F59E0B")
 
         st.markdown(f"""
         <div style="background: linear-gradient(135deg, #1E293B, #0F172A); padding: 22px; border-radius: 12px; border: 1px solid #38BDF8; box-shadow: 0 4px 20px rgba(56, 189, 248, 0.2);">
             <div style="color: #38BDF8; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">Model Predicted Fair-Market Valuation</div>
             <div style="font-size: 2.8rem; font-weight: 800; color: #FFFFFF; margin: 4px 0;">
-                ${pred_val_b:.2f} Billion <span style="font-size: 1.2rem; color: #94A3B8;">(${pred_val_m:,.0f}M)</span>
+                ${pred_val_b:.2f} Billion
             </div>
             <div style="color: #94A3B8; font-size: 0.9rem;">
                 Estimated 80% Confidence Interval: <strong style="color: #F8FAFC;">${ci_lower_b:.2f}B – ${ci_upper_b:.2f}B</strong>
-            </div>
-            <hr style="border-color: rgba(255,255,255,0.1); margin: 16px 0;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.95rem;">
-                <div>Cohort Classification: <strong style="color: {status_color};">{status_text}</strong></div>
-                <div>AI Frontier Premium Applied: <strong style="color: {'#10B981' if sim_ai else '#94A3B8'};">{'Active (+78.6%)' if sim_ai else 'Inactive'}</strong></div>
             </div>
         </div>
         """, unsafe_allow_html=True)
