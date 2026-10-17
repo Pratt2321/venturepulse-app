@@ -437,7 +437,6 @@ with tab2:
 
     with sim_col1:
         st.markdown("#### 1. Configure Startup Profile")
-        sim_name = st.text_input("Startup / Project Name:", value="Nexus AI")
         
         sim_ind = st.selectbox(
             "Primary Industry Sector:",
@@ -456,8 +455,7 @@ with tab2:
             min_value=0.5,
             max_value=15.0,
             value=3.0,
-            step=0.5,
-            help="Years active operating and scaling."
+            step=0.5
         )
 
         sim_ai = st.checkbox("Frontier AI / Foundation Model / DeepTech Company", value=True)
@@ -478,7 +476,7 @@ with tab2:
             has_tig = st.checkbox("Tiger Global", value=False)
 
     with sim_col2:
-        st.markdown(f"#### 2. Valuation Inference for **{sim_name}**")
+        st.markdown("#### 2. Valuation Inference")
 
         pred_res = predict_valuation(
             tenure_years=sim_tenure,
