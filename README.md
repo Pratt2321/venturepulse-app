@@ -5,7 +5,7 @@
 ---
 
 ## Executive Summary & Research Question
-Unlike public equities where market pricing occurs continuously with transparent price discovery, private tech valuations are historically opaque—negotiated behind closed doors in term sheets.
+Unlike public equities where market pricing occurs continuously with transparent price discovery, private tech valuations are historically opaque as they are negotiated behind closed doors.
 
 This project analyzes the latest verified cohort of **1,445 global tech unicorns** (representing over **$7.36 Trillion** in total enterprise valuation) to answer three core empirical questions:
 1. **The Valuation Equation:** *To what extent can a startup's post-money valuation be quantitatively explained by investor network capital, sector, geography, operating tenure, and frontier AI positioning?*
@@ -29,9 +29,9 @@ This project analyzes the latest verified cohort of **1,445 global tech unicorns
   * **Cognition** ($48B)
 * **Feature Engineering & Data Integrity:**
   * Cleaned valuations and extracted log-scale targets ($\text{Median Valuation} = \$1.70\text{B}$).
-  * High-precision geocoding mapped across 320+ global cities and tech hubs (100% verified coordinates).
+  * Mapped geocoding across 320+ global cities and tech hubs.
   * Extracted Tier-1 investor signals (`has_sequoia`, `has_a16z`, `has_google`, `has_khosla`, `has_thrive`, `has_softbank`, `has_accel`, `has_tiger`).
-  * Engineered frontier AI indicators (`is_ai_frontier`) and annual valuation velocity metrics ($B/year).
+  * Engineered frontier AI indicators (`is_ai_frontier`) and annual valuation velocity metrics.
 
 ---
 
