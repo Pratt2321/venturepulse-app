@@ -24,6 +24,13 @@ def get_valid_path(paths):
 
 def load_data():
     path = get_valid_path(DATA_PATHS)
+    if not os.path.exists(path):
+        import sys
+        if BASE_DIR not in sys.path:
+            sys.path.insert(0, BASE_DIR)
+        from data.download_and_clean import clean_data
+        clean_data()
+        path = get_valid_path(DATA_PATHS)
     df = pd.read_csv(path)
     # Ensure bubble sizing for map emphasizes giants like Anthropic ($965B) & OpenAI ($840B)
     # while keeping smaller $1B unicorns visible
@@ -33,6 +40,13 @@ def load_data():
 @st.cache_resource
 def load_model_bundle():
     path = get_valid_path(MODEL_PATHS)
+    if not os.path.exists(path):
+        import sys
+        if BASE_DIR not in sys.path:
+            sys.path.insert(0, BASE_DIR)
+        from models.train_model import train_and_evaluate
+        train_and_evaluate()
+        path = get_valid_path(MODEL_PATHS)
     with open(path, "rb") as f:
         bundle = pickle.load(f)
     return bundle

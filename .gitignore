@@ -4,6 +4,7 @@ __pycache__/
 .ipynb_checkpoints
 .DS_Store
 *.pkl
+!models/valuation_pipeline.pkl
 *HW05*
 updated_HW05_Midterm_Readiness_Check.ipynb
 *.pptx
