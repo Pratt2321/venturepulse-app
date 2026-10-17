@@ -566,16 +566,27 @@ with tab3:
     coef_df["pct_premium"] = (np.exp(coef_df["coefficient"]) - 1.0) * 100.0
     coef_df = coef_df.sort_values(by="pct_premium", ascending=True)
 
-    # Two-tone semantic color fill: Emerald (#00E676) for positive, Coral Red (#FF5A5F) for negative
-    bar_colors = ["#00E676" if x >= 0 else "#FF5A5F" for x in coef_df["pct_premium"]]
+    # Custom continuous color scale anchored around 0%
+    custom_gradient = [
+        [0.0, "#F43F5E"],   # Deep Coral Red (maximum negative drag, ~ -5%)
+        [0.07, "#64748B"],  # Neutral Slate Grey (near 0% baseline)
+        [0.30, "#10B981"],  # Emerald Green (+20% to +25%)
+        [0.55, "#14B8A6"],  # Mint / Teal (+40% to +45%)
+        [0.80, "#06B6D4"],  # Deep Cyan (+60%)
+        [1.0, "#38BDF8"]    # Electric Sky Blue (peak +78.6% Frontier AI)
+    ]
 
     fig_coef = go.Figure(go.Bar(
         x=coef_df["pct_premium"],
         y=coef_df["Display Name"],
         orientation="h",
         marker=dict(
-            color=bar_colors,
-            line=dict(color="rgba(255, 255, 255, 0.25)", width=1)
+            color=coef_df["pct_premium"],
+            colorscale=custom_gradient,
+            cmin=-5.0,
+            cmax=80.0,
+            showscale=False,
+            line=dict(color="rgba(255, 255, 255, 0.2)", width=1)
         ),
         hovertemplate="<b>%{y}</b><br>Valuation Premium: %{x:+.1f}%<extra></extra>"
     ))
@@ -586,6 +597,8 @@ with tab3:
     fig_coef.update_layout(
         height=560,
         margin=dict(l=0, r=20, t=10, b=10),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
         template="plotly_dark",
         xaxis=dict(
             title="Valuation Premium (% Change in Valuation, ceteris paribus)",
