@@ -429,7 +429,7 @@ with tab1:
 with tab2:
     st.subheader("Interactive Valuation & Cap Table Simulator")
     st.markdown("""
-    Select startup attributes below to predict the **fair-market post-money valuation** using our trained **Random Forest Regressor** and compare against comps like Anthropic, OpenAI, Stripe, and Databricks.
+    Select startup attributes below to predict the **fair-market post-money valuation** using our trained **Random Forest Regressor**.
     """)
 
     sim_col1, sim_col2 = st.columns([1, 1.3], gap="large")
