@@ -621,5 +621,5 @@ with tab3:
            Empirical regression demonstrates an estimated **+78.6% valuation premium** associated with frontier AI positioning over equivalent traditional SaaS companies, reflecting extreme investor demand for foundation model capabilities.
            
         3. **Investor Network Capital:**
-           Having Tier-1 venture capital backing (Sequoia, Google, SoftBank, a16z, Khosla) commands a **40% to 77% valuation multiplier**, capturing signal value, syndicate power, and competitive deal heat.
+           Having Tier-1 venture capital backing (Sequoia, Google, SoftBank, a16z, Khosla) commands an estimated **+40% to +77% valuation premium** (~1.4x–1.8x baseline multiple), capturing signal value, syndicate power, and competitive deal heat.
         """)
