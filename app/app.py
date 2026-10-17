@@ -532,32 +532,34 @@ with tab2:
 # TAB 3: Model Diagnostics & Elasticity
 # =====================================================================
 with tab3:
-    st.subheader("Statistical Diagnostics, Benchmark & VC Elasticity")
+    st.subheader("Feature Elasticity & Valuation Drivers")
     st.markdown(f"""
-    Empirical evaluation of factors driving private tech valuations across {len(df):,} global unicorns.
+    Empirical evaluation of factors driving private tech valuations across **{len(df):,}** global unicorns. Estimates represent the percentage change in expected post-money valuation associated with each attribute, holding other variables constant (Ridge Regression).
     """)
 
-    b1, b2, b3 = st.columns(3)
-    with b1:
-        st.metric("Total Sample Size", f"{len(df):,} Unicorns", "+400 modern additions")
-    with b2:
-        st.metric("Test Set Log R² Score", f"{bundle['test_r2']:.4f}", "Cross-validated holdout")
-    with b3:
-        st.metric("Selected Model Architecture", bundle['model_name'], "Non-linear tree ensemble")
-
-    st.write("---")
-    st.write("##### Feature Elasticity & Valuation Premiums (Ridge Regression)")
-    st.markdown("Percentage change in expected post-money valuation associated with each attribute, holding other variables constant.")
-
     coef_df = bundle["coefficients"].copy()
+    coef_df = coef_df[coef_df["feature"] != "has_tier1_investor"].copy()
+
+    FEATURE_DISPLAY_MAP = {
+        "has_sequoia": "Backer: Sequoia Capital",
+        "has_google": "Backer: Google / GV",
+        "has_softbank": "Backer: SoftBank",
+        "has_a16z": "Backer: a16z",
+        "has_accel": "Backer: Accel",
+        "has_thrive": "Backer: Thrive Capital",
+        "has_khosla": "Backer: Khosla Ventures",
+        "has_tiger": "Backer: Tiger Global",
+        "is_ai_frontier": "Frontier AI Status",
+        "tenure_years": "Tenure (Years)",
+        "investors_count": "Investor Count"
+    }
+    for k, v in FEATURE_DISPLAY_MAP.items():
+        coef_df["feature"] = coef_df["feature"].replace(k, v)
+
     coef_df["Display Name"] = (
         coef_df["feature"]
         .str.replace("clean_industry_", "Sector: ")
         .str.replace("hub_category_", "Hub: ")
-        .str.replace("has_", "Backer: ")
-        .str.replace("is_ai_frontier", "Frontier AI Status")
-        .str.replace("tenure_years", "Tenure (Years)")
-        .str.replace("investors_count", "Investor Count")
     )
 
     fig_coef = px.bar(
@@ -570,7 +572,7 @@ with tab3:
         labels={"coefficient": "Log-Scale Elasticity (Beta Coefficient)", "Display Name": ""},
         template="plotly_dark"
     )
-    fig_coef.update_layout(height=520, margin=dict(l=0, r=0, t=10, b=0), coloraxis_showscale=False)
+    fig_coef.update_layout(height=540, margin=dict(l=0, r=0, t=10, b=0), coloraxis_showscale=False)
     st.plotly_chart(fig_coef, use_container_width=True)
 
     with st.expander("Methodology & Academic Defense Notes (Click to expand)"):
