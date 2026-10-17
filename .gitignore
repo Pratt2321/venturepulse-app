@@ -4,3 +4,11 @@ __pycache__/
 .ipynb_checkpoints
 .DS_Store
 *.pkl
+*HW05*
+updated_HW05_Midterm_Readiness_Check.ipynb
+*.pptx
+*.pdf
+slide*.png
+streamlit_dashboard.png
+create_presentation.py
+test*.pdf

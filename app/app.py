@@ -169,31 +169,12 @@ except Exception as e:
     st.stop()
 
 # --- Top Banner Header ---
-st.markdown("""
+st.markdown(f"""
 <div class="main-header">
-    <div class="badge-pill">Venture Capital & Private Equity Intelligence</div>
-    <h1 class="hero-title">🦄 VenturePulse: Startup Valuation & Market Intelligence</h1>
+    <h1 class="hero-title">VenturePulse: Startup Valuation & Market Intelligence</h1>
     <p class="hero-subtitle">
-        Reverse-engineering private tech valuations across 1,447 global unicorns (featuring Anthropic, OpenAI, ByteDance, and Databricks) using empirical ML regression and investor network elasticity.
+        Reverse-engineering private tech valuations across {len(df):,} global unicorns (featuring Anthropic, OpenAI, ByteDance, and Databricks) using empirical ML regression and investor network elasticity.
     </p>
-</div>
-""", unsafe_allow_html=True)
-
-# --- Centicorn Spotlight Row ---
-st.markdown("""
-<div class="centicorn-spotlight">
-    <span class="spotlight-badge">🔥 Mega-Centicorn Vanguard</span>
-    <span class="spotlight-item">🤖 <strong>Anthropic</strong>: <span style="color:#00F2FE;">$965B</span> (SF)</span>
-    <span style="color:#475569;">•</span>
-    <span class="spotlight-item">🧠 <strong>OpenAI</strong>: <span style="color:#00F2FE;">$840B</span> (SF)</span>
-    <span style="color:#475569;">•</span>
-    <span class="spotlight-item">📱 <strong>ByteDance</strong>: <span style="color:#00F2FE;">$480B</span> (Beijing)</span>
-    <span style="color:#475569;">•</span>
-    <span class="spotlight-item">💾 <strong>Databricks</strong>: <span style="color:#00F2FE;">$190B</span> (SF)</span>
-    <span style="color:#475569;">•</span>
-    <span class="spotlight-item">💳 <strong>Stripe</strong>: <span style="color:#00F2FE;">$159B</span> (SF)</span>
-    <span style="color:#475569;">•</span>
-    <span class="spotlight-item">⚡ <strong>DeepSeek</strong>: <span style="color:#00F2FE;">$50B</span> (Hangzhou)</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -226,19 +207,21 @@ with k3:
     """, unsafe_allow_html=True)
 with k4:
     bay_count = (df['hub_category'] == 'SF Bay Area').sum()
+    sf_city_count = (df['city'] == 'San Francisco').sum()
     st.markdown(f"""
     <div class="stat-card">
         <div class="stat-label">Leading Tech Hub</div>
         <div class="stat-value">SF Bay Area</div>
-        <div class="stat-subtext">{bay_count:,} titans in Silicon Valley</div>
+        <div class="stat-subtext">{bay_count:,} across Bay Area ({sf_city_count:,} in SF city)</div>
     </div>
     """, unsafe_allow_html=True)
 with k5:
-    st.markdown("""
+    ent_count = (df['clean_industry'] == 'Enterprise Tech').sum()
+    st.markdown(f"""
     <div class="stat-card">
         <div class="stat-label">Largest Sector</div>
         <div class="stat-value">Enterprise Tech</div>
-        <div class="stat-subtext">561 active titans (AI & SaaS)</div>
+        <div class="stat-subtext">{ent_count:,} active titans (AI & SaaS)</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -292,16 +275,36 @@ tab1, tab2, tab3, tab4 = st.tabs([
 # =====================================================================
 with tab1:
     st.subheader("Global Headquarters of the World's Billion-Dollar Startups")
-    st.markdown(f"Displaying **{len(filtered_df):,}** active unicorns. Circles are scaled with visual logarithmic expansion so mega-centicorns like **Anthropic ($965B)** and **OpenAI ($840B)** command prominent prominence.")
+    st.markdown(f"Displaying **{len(filtered_df):,}** active unicorns worldwide. Bubble sizes are log-scaled to compress massive trillion-dollar outliers like Anthropic (\\$965B) and OpenAI (\\$840B) so early-stage unicorns remain clearly readable across every hub.")
 
-    map_c1, map_c2 = st.columns([1, 4])
-    with map_c1:
-        map_projection = st.selectbox("Map Perspective:", ["natural earth", "orthographic (3D Globe)", "mercator"])
-    with map_c2:
-        st.caption("Tip: Hover over circles to inspect company valuation, lead investors, and headquarters city. Notice the massive cluster in San Francisco!")
+    # High-contrast, colorblind-friendly color spectrum specified for dark-mode map
+    # Fills: 68% alpha opacity for dense multi-layered cluster visibility
+    # 1. Unified 6-Industry Categorical Palette (Map + "Total Valuation by Sector ($B)" chart)
+    # Linked visual legend without neon glare
+    INDUSTRY_DISPLAY_MAP = {
+        "Consumer & Retail": "Consumer & Retail",
+        "Healthcare & Life Sciences": "Hardware & Life Sciences",
+        "Hardware & Life Sciences": "Hardware & Life Sciences",
+        "Financial Services": "Financial Services",
+        "Media & Entertainment": "Media & Entertainment",
+        "Enterprise Tech": "Enterprise Tech & AI",
+        "Enterprise Tech & AI": "Enterprise Tech & AI",
+        "Industrials": "Other",
+        "Other": "Other",
+    }
+
+    INDUSTRY_HEX_COLORS = {
+        "Enterprise Tech & AI": "#00E676",      # Electric Emerald
+        "Financial Services": "#00D1C4",        # Bright Cyan
+        "Consumer & Retail": "#FF5A5F",          # Coral Pink
+        "Media & Entertainment": "#AF7AC5",      # Vibrant Purple
+        "Hardware & Life Sciences": "#FFB400",   # Gold/Amber
+        "Other": "#64748B",                      # Muted Slate Grey
+    }
 
     # Sort so smallest circles are rendered first and massive titans render on top
     map_data = filtered_df.sort_values(by="valuation_b", ascending=True).copy()
+    map_data["Industry"] = map_data["clean_industry"].map(INDUSTRY_DISPLAY_MAP).fillna(map_data["clean_industry"])
 
     fig_map = px.scatter_geo(
         map_data,
@@ -309,9 +312,10 @@ with tab1:
         lon="longitude",
         hover_name="Company",
         size="map_bubble_size",
-        color="clean_industry",
+        color="Industry",
         hover_data={
             "valuation_b": ":$.1fB",
+            "Industry": True,
             "city": True,
             "country": True,
             "year_joined": True,
@@ -320,10 +324,35 @@ with tab1:
             "latitude": False,
             "longitude": False
         },
+        labels={
+            "Industry": "Industry",
+            "valuation_b": "Valuation",
+            "city": "City",
+            "country": "Country",
+            "year_joined": "Year Joined",
+            "select_investors": "Lead Investors"
+        },
+        category_orders={
+            "Industry": [
+                "Enterprise Tech & AI",
+                "Financial Services",
+                "Consumer & Retail",
+                "Media & Entertainment",
+                "Hardware & Life Sciences",
+                "Other"
+            ]
+        },
         size_max=46,
-        projection="orthographic" if "3D" in map_projection else map_projection,
+        projection="natural earth",
         template="plotly_dark",
-        color_discrete_sequence=px.colors.qualitative.Prism
+        color_discrete_map=INDUSTRY_HEX_COLORS
+    )
+    # 2. Map Marker Polish: ~0.80 opacity with thin white border
+    fig_map.update_traces(
+        marker=dict(
+            opacity=0.80,
+            line=dict(width=1, color="rgba(255,255,255,0.8)")
+        )
     )
     fig_map.update_geos(
         showcoastlines=True, coastlinecolor="#334155",
@@ -331,45 +360,69 @@ with tab1:
         showocean=True, oceancolor="#090D16",
         showcountries=True, countrycolor="#1E293B"
     )
+    # Reduce space between the map and industry key
     fig_map.update_layout(
-        margin={"r": 0, "t": 20, "l": 0, "b": 0},
-        height=560,
-        legend=dict(orientation="h", yanchor="bottom", y=-0.22, xanchor="center", x=0.5)
+        margin={"r": 0, "t": 10, "l": 0, "b": 0},
+        height=500,
+        legend=dict(
+            orientation="h",
+            yanchor="top",
+            y=-0.02,
+            xanchor="center",
+            x=0.5,
+            title_text="Industry:",
+            itemsizing="constant",
+            font=dict(color="#E2E8F0", size=12)
+        )
     )
     st.plotly_chart(fig_map, use_container_width=True)
 
     c_left, c_right = st.columns(2)
     with c_left:
         st.write("##### Total Valuation by Sector ($B)")
-        sector_agg = filtered_df.groupby("clean_industry")["valuation_b"].sum().reset_index().sort_values(by="valuation_b", ascending=True)
+        st.caption("Consolidated market capitalization aggregated by sector.")
+        sector_agg = filtered_df.groupby("clean_industry")["valuation_b"].sum().reset_index()
+        sector_agg["Industry"] = sector_agg["clean_industry"].map(INDUSTRY_DISPLAY_MAP).fillna(sector_agg["clean_industry"])
+        sector_agg = sector_agg.sort_values(by="valuation_b", ascending=True)
         fig_sec = px.bar(
             sector_agg,
             x="valuation_b",
-            y="clean_industry",
+            y="Industry",
             orientation="h",
-            labels={"valuation_b": "Total Market Cap ($B)", "clean_industry": ""},
+            labels={"valuation_b": "Total Market Cap ($B)", "Industry": ""},
             template="plotly_dark",
-            color="valuation_b",
-            color_continuous_scale="Teal"
+            color="Industry",
+            color_discrete_map=INDUSTRY_HEX_COLORS
         )
-        fig_sec.update_layout(height=380, margin=dict(l=0, r=0, t=10, b=0), coloraxis_showscale=False)
+        # 3. Flip Sort Order: categoryorder="total ascending" on y-axis so Enterprise Tech & AI is at the top
+        fig_sec.update_yaxes(categoryorder="total ascending")
+        fig_sec.update_layout(height=380, margin=dict(l=0, r=0, t=10, b=0), showlegend=False)
         st.plotly_chart(fig_sec, use_container_width=True)
 
     with c_right:
         st.write("##### Top 10 Global Cities by Unicorn Count")
+        st.caption("City-level counts: SF proper (229) and Palo Alto (36) anchor the 376 Bay Area titans.")
         city_counts = filtered_df["city"].value_counts().head(10).reset_index()
         city_counts.columns = ["City", "Count"]
+        city_counts = city_counts.sort_values(by="Count", ascending=True).copy()
+        
+        # 4. Focal-highlight categorical scheme:
+        # San Francisco & Palo Alto in Electric Sky Blue (#38BDF8), remaining 8 in Steel Slate (#475569)
+        city_colors = [
+            "#38BDF8" if c in ["San Francisco", "Palo Alto"] else "#475569"
+            for c in city_counts["City"]
+        ]
         fig_city = px.bar(
-            city_counts.sort_values(by="Count", ascending=True),
+            city_counts,
             x="Count",
             y="City",
             orientation="h",
             labels={"Count": "Active Unicorns", "City": ""},
-            template="plotly_dark",
-            color="Count",
-            color_continuous_scale="Purp"
+            template="plotly_dark"
         )
-        fig_city.update_layout(height=380, margin=dict(l=0, r=0, t=10, b=0), coloraxis_showscale=False)
+        fig_city.update_traces(marker_color=city_colors)
+        fig_city.update_yaxes(categoryorder="total ascending")
+        fig_city.update_layout(height=380, margin=dict(l=0, r=0, t=10, b=0), showlegend=False)
         st.plotly_chart(fig_city, use_container_width=True)
 
 # =====================================================================
@@ -515,7 +568,8 @@ with tab3:
         labels={
             "tenure_years": "Operating Horizon as Unicorn (Years)",
             "valuation_b": "Post-Money Valuation ($B, Log Scale)",
-            "efficiency_tier": "Valuation Classification"
+            "efficiency_tier": "Valuation Classification",
+            "clean_industry": "Industry"
         },
         color_discrete_map={
             "Decacorn Alpha (Exceeds Market Trajectory)": "#10B981",
@@ -559,8 +613,8 @@ with tab3:
 # =====================================================================
 with tab4:
     st.subheader("Statistical Diagnostics, Benchmark & VC Elasticity")
-    st.markdown("""
-    Empirical evaluation of factors driving private tech valuations across 1,447 global unicorns.
+    st.markdown(f"""
+    Empirical evaluation of factors driving private tech valuations across {len(df):,} global unicorns.
     """)
 
     b1, b2, b3 = st.columns(3)

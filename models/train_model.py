@@ -15,8 +15,8 @@ MODEL_SAVE_PATH = "models/valuation_pipeline.pkl"
 RESULTS_DATA_PATH = "data/processed/unicorns_with_predictions.csv"
 
 def train_and_evaluate():
-    print("Loading cleaned dataset (1,447 unicorns)...")
     df = pd.read_csv(PROCESSED_DATA_PATH)
+    print(f"Loading cleaned dataset ({len(df):,} unicorns)...")
 
     df["log_valuation"] = np.log1p(df["valuation_m"])
 
