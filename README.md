@@ -59,7 +59,6 @@ Venture-backed valuations follow an extreme **Pareto / Power-Law Distribution** 
    * Linked visual breakdown for **Total Valuation by Sector ($B)** and **Top 10 Global Cities by Unicorn Count** spotlighting Silicon Valley concentration.
 2. **The VC Valuation Simulator:** Real-time inference engine powered by our trained **Random Forest Regressor** where users select sector, hub location, company maturity, AI frontier status, and investor backing to compute:
    * Fair-Market Valuation with an **80% Confidence Interval**.
-   * Nearest Real-World Unicorn Comps.
 3. **Statistical Diagnostics & Elasticity:** 5-fold cross-validation metrics, Ridge elasticity coefficients, and academic defense methodology notes.
 
 ---

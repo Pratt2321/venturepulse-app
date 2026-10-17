@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from utils.model_loader import load_data, load_model_bundle, predict_valuation, find_closest_comps
+from utils.model_loader import load_data, load_model_bundle, predict_valuation
 
 # --- Page Config ---
 st.set_page_config(
@@ -509,24 +509,7 @@ with tab2:
         </div>
         """, unsafe_allow_html=True)
 
-        st.write("")
-        st.markdown("##### Nearest Real-World Unicorn Comps")
-        comps = find_closest_comps(df, sim_ind, sim_hub, sim_ai, n=3)
-        for _, comp in comps.iterrows():
-            st.markdown(f"""
-            <div class="comp-card">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="comp-title">{comp['Company']}</div>
-                    <div style="font-weight: 700; color: #10B981; font-size: 1.15rem;">${comp['valuation_b']:.1f}B Valuation</div>
-                </div>
-                <div style="color: #94A3B8; font-size: 0.85rem; margin-top: 4px;">
-                    {comp['city']}, {comp['country']} | Joined: {comp['year_joined']} | Velocity: ${comp['valuation_velocity_b']:.1f}B/yr
-                </div>
-                <div style="color: #64748B; font-size: 0.8rem; margin-top: 3px;">
-                    Lead Investors: {comp['select_investors']}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+
 
 # =====================================================================
 # TAB 3: Model Diagnostics & Elasticity
