@@ -562,17 +562,41 @@ with tab3:
         .str.replace("hub_category_", "Hub: ")
     )
 
-    fig_coef = px.bar(
-        coef_df.sort_values(by="coefficient", ascending=True),
-        x="coefficient",
-        y="Display Name",
+    # Convert raw Ridge regression beta to percentage valuation premium: pct_premium = (np.exp(beta) - 1) * 100
+    coef_df["pct_premium"] = (np.exp(coef_df["coefficient"]) - 1.0) * 100.0
+    coef_df = coef_df.sort_values(by="pct_premium", ascending=True)
+
+    # Two-tone semantic color fill: Emerald (#00E676) for positive, Coral Red (#FF5A5F) for negative
+    bar_colors = ["#00E676" if x >= 0 else "#FF5A5F" for x in coef_df["pct_premium"]]
+
+    fig_coef = go.Figure(go.Bar(
+        x=coef_df["pct_premium"],
+        y=coef_df["Display Name"],
         orientation="h",
-        color="coefficient",
-        color_continuous_scale="Spectral",
-        labels={"coefficient": "Log-Scale Elasticity (Beta Coefficient)", "Display Name": ""},
-        template="plotly_dark"
+        marker=dict(
+            color=bar_colors,
+            line=dict(color="rgba(255, 255, 255, 0.25)", width=1)
+        ),
+        hovertemplate="<b>%{y}</b><br>Valuation Premium: %{x:+.1f}%<extra></extra>"
+    ))
+
+    # Vertical dashed zero-reference line at x = 0
+    fig_coef.add_vline(x=0, line_dash="dash", line_color="#94A3B8", line_width=1.5)
+
+    fig_coef.update_layout(
+        height=560,
+        margin=dict(l=0, r=20, t=10, b=10),
+        template="plotly_dark",
+        xaxis=dict(
+            title="Valuation Premium (% Change in Valuation, ceteris paribus)",
+            tickvals=[-10, 0, 20, 40, 60, 80],
+            ticktext=["-10%", "0%", "+20%", "+40%", "+60%", "+80%"],
+            gridcolor="rgba(255, 255, 255, 0.08)"
+        ),
+        yaxis=dict(
+            gridcolor="rgba(255, 255, 255, 0.05)"
+        )
     )
-    fig_coef.update_layout(height=540, margin=dict(l=0, r=0, t=10, b=0), coloraxis_showscale=False)
     st.plotly_chart(fig_coef, use_container_width=True)
 
     with st.expander("Methodology & Academic Defense Notes (Click to expand)"):
