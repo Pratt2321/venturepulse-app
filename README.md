@@ -83,3 +83,11 @@ python3 models/train_model.py
 ```bash
 streamlit run app/app.py
 ```
+
+---
+
+## Generative AI Disclosure
+- **Tools Used:** Claude 3.5 Sonnet / Gemini (via Antigravity & Web UI).
+- **Purposes:** Prototyping Streamlit CSS layouts, debugging Plotly continuous color ramp dictionaries, and styling markdown callout containers.
+- **Verification:** All regression mathematical conversions (transforming Ridge beta coefficients to percentage premiums via (exp(beta) - 1) * 100), data hygiene entity checks, duplicate homonym audits, and architectural decisions were manually calculated, verified, and validated against the raw CB Insights dataset.
+- **Personal Contribution:** Conceptualized problem framing, implemented data cleaning/pipeline logic, authored the analytical narrative, and designed the interactive UI.
